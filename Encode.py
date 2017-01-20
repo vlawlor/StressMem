@@ -315,7 +315,6 @@ random.shuffle(enc_lists) #shuffle the list
 for dict in enc_lists: #repeat the procedure
     block = 2
     curr_task = show_task(dict)
-    curr_item = show_enc_item(dict)
     curr_item, curr_type, response, curr_RT = show_enc_item(dict)
     fix_duration = show_ITI() 
 
