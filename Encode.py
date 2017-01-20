@@ -53,8 +53,8 @@ df_pos_encode = df_pos_encode.head(50) # shuffle the positives, then get the fir
 df_encoded = df_neg_encode.append(df_pos_encode)
 df_encoded = df_encoded.reset_index(drop = True)
 df_encoded['Question'] = 'Describes you?'
-df_encoded.ix[0:24, 'Question'] = 'Positive or Negative?'
-df_encoded.ix[50:74, 'Question'] = 'Positive or Negative?' # add the questions so that there is a 50/50 ratio for neg and pos words
+df_encoded.ix[0:24, 'Question'] = 'Emotion'
+df_encoded.ix[50:74, 'Question'] = 'Emotion' # add the questions so that there is a 50/50 ratio for neg and pos words
 
 df_encoded.to_csv(path2data + 'Encoded_words/encoded_words_' + subject + '.csv') # saving the words and questions
 enc_lists = df_encoded.T.to_dict().values() # turn them into lists of dicts
@@ -88,10 +88,14 @@ quit_key = 'q'
 # Recurring stimuli
 word = visual.TextStim(win, text='XXX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = 'SteelBlue')
 task = visual.TextStim(win, text = 'XX', font='Arial', height = 0.10, pos = (0,0), wrapWidth = 50, color = 'SeaGreen')
-choice = visual.TextStim(win, text = '_____', font='Arial', height = 0.10, pos = (0,0), wrapWidth = 50, color = 'Salmon', bold=True)
+choice = visual.TextStim(win, text = '_____', font='Arial', height = 0.10, pos = (0,-.29), wrapWidth = 50, color = 'Salmon', bold=True)
 instruct = visual.TextStim(win, text = 'XX', height = 0.10, wrapWidth = None, pos = (0,0), color = 'SteelBlue')
 fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,0), color = 'SteelBlue')
 instruct = visual.TextStim(win, text = 'XXXX', height = 0.10, wrapWidth = None, pos = (0,0), color = 'SteelBlue')
+options = visual.TextStim(win, text = 'XXXX', font='Arial', height = 0.10, pos = (0,-.27), wrapWidth = 50, color = 'Salmon', bold=True)
+
+key_sound = sound.SoundPygame(value='click_quiet.ogg')
+stim_sound = sound.SoundPygame(value='cards2.ogg')
 
 # Clocks
 RT = core.Clock()
@@ -138,12 +142,14 @@ def show_enc_item(in_dict):
     RT.reset()
     allKeys = []
     frame = 0
+    stim_sound.play()
 
     while frame < (7*half_sec):
         allKeys = event.getKeys(keyList=[key_1, key_5, quit_key],timeStamped=RT)
         #arrow.draw()
         task.draw()
         word.draw()
+        options.draw()
         win.flip()
 
         if allKeys:
@@ -151,27 +157,39 @@ def show_enc_item(in_dict):
             curr_RT = allKeys[0][1]
 
             if enc_resp == key_1:
-                if question == 'Positive or Negative?':
+                key_sound.play()
+                if question == 'Emotion':
                     response = 'positive'
+                    choice.setText('________')
+                    choice.setPos(newPos=(-.33, -.27))
                 if question == 'Describes you?':
                     response = 'yes'
-                
+                    choice.setText('____')
+                    choice.setPos(newPos=(-.29, -.27))
                 while frame < (7*half_sec):
                     #arrow.draw()
                     task.draw()
                     word.draw()
+                    options.draw()
+                    choice.draw()
                     win.flip()
                     frame = frame + 1
             elif enc_resp == key_5:
-                if question == 'Positive or Negative?':
+                key_sound.play()
+                if question == 'Emotion':
                     response = 'negative'
+                    choice.setText('________')
+                    choice.setPos(newPos=(.31, -.27))
                 if question == 'Describes you?':
                     response = 'no'
-                    
+                    choice.setText('____')
+                    choice.setPos(newPos=(.31, -.27))
                 while frame < (7*half_sec):
                     #arrow.draw()
                     task.draw()
                     word.draw()
+                    options.draw()
+                    choice.draw()
                     win.flip()
                     frame = frame + 1
             elif enc_resp == quit_key:
@@ -187,17 +205,20 @@ def show_task(in_dict):
     question = in_dict['Question']
     task.setText(text=question)
 
-    task.setPos(newPos=(0,-0.3))
-    task.setPos(newPos=(0,-0.3))
+    task.setPos(newPos=(0,.3))
+    task.setPos(newPos=(0,.3))
 
     if question == 'Describes you?':
-        curr_task = 'pos_neg'
-    elif question == 'Positive or Negative?':
         curr_task = 'describes_you'
+        options.setText('Yes                       No')
+    elif question == 'Emotion':
+        curr_task = 'emotion'
+        options.setText('Positive                Negative')
 
     for frame in range(half_sec):
         #arrow.draw()
         task.draw()
+        options.draw()
         win.flip()
 
     return curr_task
@@ -217,6 +238,9 @@ def show_ITI():
 
 def show_break():
     '''Display break text for 30 seconds'''
+    event.clearEvents()
+    allKeys = []
+    advance = 'false'
 
     duration = 30*fps
 
@@ -224,6 +248,10 @@ def show_break():
         instruct.setText(break_instructions)
         instruct.draw()
         win.flip()
+        if allKeys:
+            resp = allKeys[0][0]
+            if resp == quit_key:
+                   core.quit()
 
     return duration*refresh
 
@@ -243,13 +271,13 @@ break_instructions = 'Good job! You are halfway through this task. The next part
 legs if you would like, and press 1 to move on to the second half of the task when you are ready.\n\nThis screen will advance automatically in 30 seconds, and then you \
 will be able to advance to the second half of the task when you are ready.'
 
-break_intsructions_2 = ['Press 1 to begin the second half of the task']
+break_instructions_2 = ['Press 1 to begin the second half of the task']
 
 # Practice Stimuli
-pract1 = {'Word': 'faker', 'val' : '1', 'Question': 'Positive or Negative?'}
+pract1 = {'Word': 'faker', 'val' : '1', 'Question': 'Emotion'}
 pract2 = {'Word': 'generous', 'val' : '1', 'Question': 'Describes you?'}
 pract3 = {'Word': 'loner', 'val' : '1', 'Question': 'Describes you?'}
-pract4 = {'Word': 'thoughtful', 'val' : '1', 'Question': 'Positive or Negative?'}
+pract4 = {'Word': 'thoughtful', 'val' : '1', 'Question': 'Emotion'}
 pract_trials = [pract1, pract2, pract3, pract4]
 
 # Begin practice trials
@@ -266,7 +294,7 @@ show_instruct(final_enc_instructions)
 # Open output file for writing the encoding data
 enc_file = expInfo['SubjectID'] + '_' + expInfo['Date']
 enc_file = open(path2data + enc_file+'_StressMem_enc' +'.csv', 'w')
-enc_file.write('subject,block, trial,word,type,task,response,RT,iti_dur(ms)\n')
+enc_file.write('subject,trial,block,word,val,task,response,RT,iti_dur(ms)\n')
 trial = 1
 
 for dict in enc_lists:
