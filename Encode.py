@@ -13,7 +13,7 @@ path2words = '/Users/mlm2/Work/Expts/StressMem/Stimuli/'
 path2data = '/Users/mlm2/Work/Expts/StressMem/Data/'
 
 
-# GUI for subject number, date, and mode (behav, eeg).
+# GUI for subject number and date
 try:
     expInfo = misc.fromFile('StressMemlastParams.pickle')
 except:
@@ -72,7 +72,8 @@ half_sec = int(0.5*fps)
 wintype='pyglet' 
 #win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Elyssa Mac', color = 'Ivory', winType=wintype, units = 'cm')
 #win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Dan Mac', color = 'Ivory', winType=wintype, units = 'cm')
-win = visual.Window([1920, 1080], fullscr = True, allowGUI = False, monitor = 'MLM Mac', color = 'Ivory', winType=wintype, units = 'norm')
+#win=visual.Window([1920, 1080],fullscr=True, allowGUI=False, monitor='MLMmonitor', units='pix')
+win = visual.Window([1024,768], fullscr = False, allowGUI = False, monitor = 'testMonitor', color = 'Ivory', winType=wintype, units = 'norm')
 #win = visual.Window([1024,768], fullscr = True, allowGUI = False, monitor = 'EEG_booth', color = 'Ivory', winType=wintype, units = 'norm') 
 
 # Buttons
@@ -88,9 +89,9 @@ quit_key = 'q'
 word = visual.TextStim(win, text='XXX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = 'SteelBlue')
 task = visual.TextStim(win, text = 'XX', font='Arial', height = 0.10, pos = (0,0), wrapWidth = 50, color = 'SeaGreen')
 choice = visual.TextStim(win, text = '_____', font='Arial', height = 0.10, pos = (0,0), wrapWidth = 50, color = 'Salmon', bold=True)
-instruct = visual.TextStim(win, text = 'XX', height = 0.10, wrapWidth = 80, pos = (0,0), color = 'SteelBlue')
+instruct = visual.TextStim(win, text = 'XX', height = 0.10, wrapWidth = None, pos = (0,0), color = 'SteelBlue')
 fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,0), color = 'SteelBlue')
-instruct = visual.TextStim(win, text = 'XXXX', height = 0.10, wrapWidth = 80, pos = (0,0), color = 'SteelBlue')
+instruct = visual.TextStim(win, text = 'XXXX', height = 0.10, wrapWidth = None, pos = (0,0), color = 'SteelBlue')
 
 # Clocks
 RT = core.Clock()
@@ -214,9 +215,22 @@ def show_ITI():
 
     return duration*refresh
 
+def show_break():
+    '''Display break text for 30 seconds'''
+
+    duration = 30*fps
+
+    for frames in range(duration):
+        instruct.setText(break_instructions)
+        instruct.draw()
+        win.flip()
+
+    return duration*refresh
+
+
 
 # Instructions
-enc_instructions = ['Welcome!\n\nToday we will test your memory.\n\n In this task, words will appear on the screen in front of you. \
+enc_instructions = ['Welcome!\n\n In this task, words will appear on the screen in front of you. \
 \n\n After each word is presented, you will be asked one of two questions about the word,\nand you will respond by pressing a button.\
 \n\nPress button 1 to advance.', 
 'If you are asked if a word describes you, answer yes or no based on whether or not you think the word describes \
@@ -225,8 +239,11 @@ buttons 1 and 5. \n\nYou will have 3.5 seconds to respond.\n\nThe task will repe
 \n\nPress button 1 to begin the practice trials.']
 final_enc_instructions = ['Do you have any final questions?\n\nIf not, press 1 to begin the task']
 
-break_instructions = ['Good job! You are halfway through this task. The next part of the task is exactly the same as before. Take a minute or two to stretch your \
-legs if you would like, and press 1 to move on to the second half of the task when you are ready.']
+break_instructions = 'Good job! You are halfway through this task. The next part of the task is exactly the same as before. Take a minute or two to stretch your \
+legs if you would like, and press 1 to move on to the second half of the task when you are ready.\n\nThis screen will advance automatically in 30 seconds, and then you \
+will be able to advance to the second half of the task when you are ready.'
+
+break_intsructions_2 = ['Press 1 to begin the second half of the task']
 
 # Practice Stimuli
 pract1 = {'Word': 'faker', 'val' : '1', 'Question': 'Positive or Negative?'}
@@ -237,6 +254,7 @@ pract_trials = [pract1, pract2, pract3, pract4]
 
 # Begin practice trials
 show_instruct(enc_instructions)
+
 for dict in pract_trials:
     show_task(dict)
     show_enc_item(dict)
@@ -248,7 +266,7 @@ show_instruct(final_enc_instructions)
 # Open output file for writing the encoding data
 enc_file = expInfo['SubjectID'] + '_' + expInfo['Date']
 enc_file = open(path2data + enc_file+'_StressMem_enc' +'.csv', 'w')
-enc_file.write('subject,trial,word,type,task,response,RT,iti_dur(ms)\n')
+enc_file.write('subject,block, trial,word,type,task,response,RT,iti_dur(ms)\n')
 trial = 1
 
 for dict in enc_lists:
@@ -263,8 +281,10 @@ for dict in enc_lists:
 
     # Update trial number
     trial = trial + 1
-show_instruct(break_instructions) #take a break
+show_break()
+show_instruct(break_instructions_2) #take a break
 random.shuffle(enc_lists) #shuffle the list
+
 for dict in enc_lists: #repeat the procedure
     block = 2
     curr_task = show_task(dict)
