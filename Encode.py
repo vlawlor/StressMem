@@ -3,7 +3,10 @@ import pandas as pd
 import random, sys
 import os.path
 from random import shuffle
-from psychopy import core, data, event, gui, misc, sound, visual
+from psychopy import prefs
+prefs.general['audioLib'] = ['pygame']
+from psychopy import sound
+from psychopy import core, data, event, gui, misc, visual
 
 print (pd.__version__)
 print (sys.version)
@@ -11,6 +14,7 @@ print (sys.path)
 
 path2words = '/Users/mlm2/Work/Expts/StressMem/Stimuli/'
 path2data = '/Users/mlm2/Work/Expts/StressMem/Data/'
+
 
 
 # GUI for subject number and date
@@ -23,7 +27,7 @@ expInfo['Date'] = data.getDateStr()
 
 dlg = gui.DlgFromDict(expInfo, title='StressMem', fixed=['Date'])
 if dlg.OK:
-    misc.toFile('SStressMemlastParams.pickle', expInfo) 
+    misc.toFile('StressMemlastParams.pickle', expInfo) 
 else:
     core.quit()
 subject = expInfo['SubjectID']
@@ -73,7 +77,7 @@ wintype='pyglet'
 #win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Elyssa Mac', color = 'Ivory', winType=wintype, units = 'cm')
 #win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Dan Mac', color = 'Ivory', winType=wintype, units = 'cm')
 #win=visual.Window([1920, 1080],fullscr=True, allowGUI=False, monitor='MLMmonitor', units='pix')
-win = visual.Window([1024,768], fullscr = False, allowGUI = False, monitor = 'testMonitor', color = 'Ivory', winType=wintype, units = 'norm')
+win = visual.Window([1024,768], fullscr = False, allowGUI = False, monitor = 'testMonitor', color = '#fffff7', winType=wintype, units = 'norm')
 #win = visual.Window([1024,768], fullscr = True, allowGUI = False, monitor = 'EEG_booth', color = 'Ivory', winType=wintype, units = 'norm') 
 
 # Buttons
@@ -86,16 +90,16 @@ pause_key = 'p' # Advance screen following EEG net placement and QC
 quit_key = 'q'
 
 # Recurring stimuli
-word = visual.TextStim(win, text='XXX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = 'SteelBlue')
-task = visual.TextStim(win, text = 'XX', font='Arial', height = 0.10, pos = (0,0), wrapWidth = 50, color = 'SeaGreen')
-choice = visual.TextStim(win, text = '_____', font='Arial', height = 0.10, pos = (0,-.29), wrapWidth = 50, color = 'Salmon', bold=True)
-instruct = visual.TextStim(win, text = 'XX', height = 0.10, wrapWidth = None, pos = (0,0), color = 'SteelBlue')
-fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,0), color = 'SteelBlue')
-instruct = visual.TextStim(win, text = 'XXXX', height = 0.10, wrapWidth = None, pos = (0,0), color = 'SteelBlue')
-options = visual.TextStim(win, text = 'XXXX', font='Arial', height = 0.10, pos = (0,-.27), wrapWidth = 50, color = 'Salmon', bold=True)
+word = visual.TextStim(win, text='XXX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#1B1C96')
+task = visual.TextStim(win, text = 'XX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#11A08E')
+choice = visual.TextStim(win, text = '_____', font='Arial', height = 0.15, pos = (0,-.29), wrapWidth = 50, color = '#ff7a5b', bold=True)
+instruct = visual.TextStim(win, text = 'XX', height = 0.10, wrapWidth = None, pos = (0,0), color = '#1B1C96')
+fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,0), color = '#1B1C96')
+instruct = visual.TextStim(win, text = 'XXXX', height = 0.10, wrapWidth = None, pos = (0,0), color = '#1B1C96')
+options = visual.TextStim(win, text = 'XXXX', font='Arial', height = 0.15, pos = (0,-.27), wrapWidth = 50, color = '#ff7a5b', bold=True)
 
-key_sound = sound.SoundPygame(value='click_quiet.ogg')
-stim_sound = sound.SoundPygame(value='cards2.ogg')
+#key_sound = sound.SoundPygame('click_quiet.ogg')
+#stim_sound = sound.SoundPygame('cards2.ogg')
 
 # Clocks
 RT = core.Clock()
@@ -124,10 +128,34 @@ def show_instruct(instruct_list, adv_key=key_1, quit=quit_key):
         
                     elif resp == quit_key:
                         core.quit()
-                        
 def show_enc_item(in_dict):
-    '''Display encoding item, encoding task, and arrow for 3500 ms'''
+    '''Display encoding item and encoding task for 1 second'''
+    question = in_dict['Question']
+    curr_item = in_dict['Word']
+    task.setText(text=question)
 
+    task.setPos(newPos=(0,.3))
+    task.setPos(newPos=(0,.3))
+    word.setText(text=curr_item)
+    word.setPos(newPos=(0,0))
+    if question == 'Describes you?':
+        curr_task = 'describes_you'
+        options.setText('Yes (1)     No (5)')
+    elif question == 'Emotion':
+        curr_task = 'emotion'
+        options.setText('Positive (1)     Negative (5)')
+
+    for frame in range(2*fps):
+        word.draw()
+        task.draw()
+        #options.draw()
+        win.flip()
+
+    return curr_item
+
+
+def show_enc_full(in_dict):
+    '''Display encoding item, encoding task, and options for 10 seconds or until response'''
     response = 'no_response'
     curr_RT = 999.0
     question = in_dict['Question']
@@ -135,6 +163,7 @@ def show_enc_item(in_dict):
     curr_type = in_dict['val']
     word.setText(text=curr_item)
     choice.setColor('Salmon')
+    advance = 'false'
 
     word.setPos(newPos=(0,0))
 
@@ -142,9 +171,9 @@ def show_enc_item(in_dict):
     RT.reset()
     allKeys = []
     frame = 0
-    stim_sound.play()
+#    stim_sound.play()
 
-    while frame < (7*half_sec):
+    while frame < (10*fps) and advance == 'false':
         allKeys = event.getKeys(keyList=[key_1, key_5, quit_key],timeStamped=RT)
         #arrow.draw()
         task.draw()
@@ -157,16 +186,19 @@ def show_enc_item(in_dict):
             curr_RT = allKeys[0][1]
 
             if enc_resp == key_1:
-                key_sound.play()
-                if question == 'Emotion':
+                advance = 'true'
+#               key_sound.play()
+                if question == 'emotion':
                     response = 'positive'
                     choice.setText('________')
-                    choice.setPos(newPos=(-.33, -.27))
-                if question == 'Describes you?':
+                    choice.setPos(newPos=(-.33, .27))
+                    advance = 'true'
+                if question == 'describes you?':
                     response = 'yes'
                     choice.setText('____')
-                    choice.setPos(newPos=(-.29, -.27))
-                while frame < (7*half_sec):
+                    choice.setPos(newPos=(-.29, .27))
+                    advance = 'true'
+                while frame < (fps) and advance =='false':
                     #arrow.draw()
                     task.draw()
                     word.draw()
@@ -174,16 +206,18 @@ def show_enc_item(in_dict):
                     choice.draw()
                     win.flip()
                     frame = frame + 1
+                    
             elif enc_resp == key_5:
-                key_sound.play()
-                if question == 'Emotion':
+                advance = 'true'
+#                key_sound.play()
+                if question == 'emotion':
                     response = 'negative'
                     choice.setText('________')
-                    choice.setPos(newPos=(.31, -.27))
-                if question == 'Describes you?':
+                    choice.setPos(newPos=(.31, .27))
+                if question == 'describes you?':
                     response = 'no'
                     choice.setText('____')
-                    choice.setPos(newPos=(.31, -.27))
+                    choice.setPos(newPos=(.31, .27))
                 while frame < (7*half_sec):
                     #arrow.draw()
                     task.draw()
@@ -196,7 +230,7 @@ def show_enc_item(in_dict):
                 core.quit()
             
         frame = frame + 1
-    return (curr_item, curr_type, response, curr_RT)
+    return (curr_type, response, curr_RT)
 
 
 def show_task(in_dict):
@@ -210,15 +244,15 @@ def show_task(in_dict):
 
     if question == 'Describes you?':
         curr_task = 'describes_you'
-        options.setText('Yes                       No')
+        options.setText('Yes (1)     No (5)')
     elif question == 'Emotion':
         curr_task = 'emotion'
-        options.setText('Positive                Negative')
+        options.setText('Positive (1)     Negative (5)')
 
     for frame in range(half_sec):
         #arrow.draw()
         task.draw()
-        options.draw()
+        #options.draw()
         win.flip()
 
     return curr_task
@@ -258,12 +292,15 @@ def show_break():
 
 
 # Instructions
-enc_instructions = ['Welcome!\n\n In this task, words will appear on the screen in front of you. \
-\n\n After each word is presented, you will be asked one of two questions about the word,\nand you will respond by pressing a button.\
-\n\nPress button 1 to advance.', 
+enc_instructions = ['Welcome!\n\nIn this task, words will appear on the screen in front of you. \
+\n\nAfter each word is presented, you will be asked one of two questions about the word,\nand you will respond by pressing a button.\
+\n\nPress button 1 to advance.',  
+'If you are asked about emotion, select whether you think the word is positive or negative. \
+\n\nPress button 1 to advance.',
 'If you are asked if a word describes you, answer yes or no based on whether or not you think the word describes \
-or relates to you. If you are asked if a word is positive or negative,  select whether you think the word is positive or negative. Please answer by pressing \
-buttons 1 and 5. \n\nYou will have 3.5 seconds to respond.\n\nThe task will repeat once, with a short break in between the two blocks. \
+or relates to you. \
+\n\nPress button 1 to advance.',
+'\n\nThere are 2 blocks of trials, with a short break between the blocks. \
 \n\nPress button 1 to begin the practice trials.']
 final_enc_instructions = ['Do you have any final questions?\n\nIf not, press 1 to begin the task']
 
@@ -286,6 +323,7 @@ show_instruct(enc_instructions)
 for dict in pract_trials:
     show_task(dict)
     show_enc_item(dict)
+    show_enc_full(dict)
     show_ITI()
 show_instruct(final_enc_instructions)
 
@@ -300,7 +338,8 @@ trial = 1
 for dict in enc_lists:
     block = 1
     curr_task = show_task(dict)
-    curr_item, curr_type, response, curr_RT = show_enc_item(dict)
+    curr_item = show_enc_item(dict)
+    curr_type, response, curr_RT = show_enc_full(dict)
     fix_duration = show_ITI() 
 
     # Record trial data
