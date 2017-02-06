@@ -44,57 +44,68 @@ if  session != 1 and session != 2: # needs a 1 or 2 for session to show the corr
         core.quit()
 
 # WORDS
+if session == 1:
+    # making the word lists
+    df_new = pd.read_csv(path2words + 'balanced_words_option8_WORKING.csv')
+    df_encoded = pd.read_csv(path2data + subject + '_StressMem_enc.csv')
+    df_encoded['status'] = 'old'
+    df_encoded = df_encoded[df_encoded.block == 1]
+    enc_list = df_encoded.word.tolist()
+    df_encoded_neg = df_encoded[df_encoded.val == 0]
+    df_encoded_pos = df_encoded[df_encoded.val == 1]
 
-# making the word lists
-df_new = pd.read_csv(path2words + 'balanced_words_option8_WORKING.csv')
-df_encoded = pd.read_csv(path2data + subject + '_StressMem_enc.csv')
-df_encoded['status'] = 'old'
-df_encoded = df_encoded[df_encoded.block == 1]
-enc_list = df_encoded.word.tolist()
-df_encoded_neg = df_encoded[df_encoded.val == 0]
-df_encoded_pos = df_encoded[df_encoded.val == 1]
+    for words in enc_list:
+        df_new = df_new[df_new.Word != words] #removing the old words
 
-for words in enc_list:
-    df_new = df_new[df_new.Word != words] #removing the old words
+    df_new = df_new[['Word', 'val']]
+    df_new['task'] = ''
+    df_new.columns = ['word', 'val', 'task']
+    df_new['status'] = 'new'
+    df_new_pos = df_new[df_new.val == 1]
+    df_new_pos = df_new_pos.iloc[np.random.permutation(len(df_new_pos))]
+    df_new_neg = df_new[df_new.val == 0]
+    df_new_neg = df_new_neg.iloc[np.random.permutation(len(df_new_neg))]
 
-df_new = df_new[['Word', 'val']]
-df_new['task'] = ''
-df_new.columns = ['word', 'val', 'task']
-df_new['status'] = 'new'
-df_new_pos = df_new[df_new.val == 1]
-df_new_pos = df_new_pos.iloc[np.random.permutation(len(df_new_pos))]
-df_new_neg = df_new[df_new.val == 0]
-df_new_neg = df_new_neg.iloc[np.random.permutation(len(df_new_neg))]
+    # handling the positive lists
+    df_encoded_pos = df_encoded_pos.iloc[np.random.permutation(len(df_encoded_pos))]
+    df_encoded_pos = df_encoded_pos.reset_index(drop = True)
+    df_encoded_pos = df_encoded_pos[['word', 'val', 'task']]
+    df_encoded_pos['status'] = 'old'
+    df_new_pos_1 = df_new_pos.head(25)
+    df_new_pos_2 = df_new_pos.tail(25)
+    df_encoded_pos_1 = df_encoded_pos.head(25)
+    df_encoded_pos_2 = df_encoded_pos.tail(25)
 
-# handling the positive lists
-df_encoded_pos = df_encoded_pos.iloc[np.random.permutation(len(df_encoded_pos))]
-df_encoded_pos = df_encoded_pos.reset_index(drop = True)
-df_encoded_pos = df_encoded_pos[['word', 'val', 'task']]
-df_encoded_pos['status'] = 'old'
-df_new_pos_1 = df_new_pos.head(25)
-df_new_pos_2 = df_new_pos.tail(25)
-df_encoded_pos_1 = df_encoded_pos.head(25)
-df_encoded_pos_2 = df_encoded_pos.tail(25)
+    # handling the negative lists
+    df_encoded_neg = df_encoded_neg.iloc[np.random.permutation(len(df_encoded_neg))]
+    df_encoded_neg = df_encoded_neg.reset_index(drop = True)
+    df_encoded_neg = df_encoded_neg[['word', 'val', 'task']]
+    df_encoded_neg['status'] = 'old'
+    df_new_neg_1 = df_new_neg.head(25)
+    df_new_neg_2 = df_new_neg.tail(25)
+    df_encoded_neg_1 = df_encoded_neg.head(25)
+    df_encoded_neg_2 = df_encoded_neg.tail(25)
 
-# handling the negative lists
-df_encoded_neg = df_encoded_neg.iloc[np.random.permutation(len(df_encoded_neg))]
-df_encoded_neg = df_encoded_neg.reset_index(drop = True)
-df_encoded_neg = df_encoded_neg[['word', 'val', 'task']]
-df_encoded_neg['status'] = 'old'
-df_new_neg_1 = df_new_neg.head(25)
-df_new_neg_2 = df_new_neg.tail(25)
-df_encoded_neg_1 = df_encoded_neg.head(25)
-df_encoded_neg_2 = df_encoded_neg.tail(25)
+    # combining and making lists
+    df_session_1 = pd.DataFrame()
+    df_session_1 = df_encoded_neg_1.append(df_new_neg_1)
+    df_session_1 = df_session_1.append(df_encoded_pos_1)
+    df_session_1 = df_session_1.append(df_new_pos_1)
+    df_session_1 = df_session_1.reset_index(drop = True)
+    session_1_lists = df_session_1.T.to_dict().values() # turn them into lists of dicts
+    random.shuffle(session_1_lists) # shuffles the list of dicts
 
-# combining and making lists
-df_session_1 = df_encoded_neg_1.append(df_new_neg_1, df_encoded_pos_1, df_new_pos_1)
-session_1_lists = df_session_1.T.to_dict().values() # turn them into lists of dicts
-random.shuffle(session_1_lists) # shuffles the list of dicts
-
-df_session_2 = df_encoded_neg_2.append(df_new_neg_2, df_encoded_pos_2, df_new_pos_2)
-session_2_lists = df_session_2.T.to_dict().values() # turn them into lists of dicts
-random.shuffle(session_2_lists)
-
+    df_session_2 = pd.DataFrame()
+    df_session_2 = df_encoded_neg_2.append(df_new_neg_2)
+    df_session_2 = df_session_2.append(df_encoded_pos_2)
+    df_session_2 = df_session_2.append(df_new_pos_2)
+    df_session_2 = df_session_2.reset_index(drop = True)
+    df_session_2.to_csv(path2words + 'Session_2_Words/' + subject + '_session_2_words.csv') 
+if session == 2:
+    df_session_2 = pd.read_csv(path2words + 'Session_2_Words/' + subject + '_session_2_words.csv')
+    session_2_lists = df_session_2.T.to_dict().values() # turn them into lists of dicts
+    random.shuffle(session_2_lists)
+    
 # Refresh rate
 refresh = 16.7
 fps = int(np.ceil(1000/refresh)) # fps = flips per second; done this way in case refresh rate changes
@@ -103,9 +114,10 @@ half_sec = int(0.5*fps)
 # Window
 # Switch to full, no GUI, and EEG_booth
 wintype='pyglet'
-#win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Elyssa Mac', color = 'Ivory', winType=wintype, units = 'cm')
+#win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Elyssa Mac', color = 'Ivory', winType=wintype, units = 'norm')
 #win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Dan Mac', color = 'Ivory', winType=wintype, units = 'cm')
-win=visual.Window([1920, 1080],fullscr=True, allowGUI=False, monitor='MLMmonitor', color = 'Ivory', units='norm')
+#win=visual.Window([1920, 1080],fullscr=True, allowGUI=False, monitor='MLMmonitor', color = 'Ivory', units='norm')
+win=visual.Window([1440, 900], fullscr=True, allowGUI=False, monitor='Prez', color='Ivory', units='norm')
 #win = visual.Window([1024,768], fullscr = False, allowGUI = False, monitor = 'testMonitor', color = '#fffff7', winType=wintype, units = 'norm')
 #win = visual.Window([1024,768], fullscr = True, allowGUI = False, monitor = 'EEG_booth', color = 'Ivory', winType=wintype, units = 'norm') 
 
@@ -120,19 +132,19 @@ pause_key = 'p' # Advance screen following EEG net placement and QC
 quit_key = 'q'
 
 # Recurring stimuli
-word = visual.TextStim(win, text='XXXX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = 'SteelBlue')
-task = visual.TextStim(win, text = 'XXXX', font='Arial', height = 0.10, pos = (0,0), wrapWidth = 50, color = 'SeaGreen')
-choice = visual.TextStim(win, text = '__', font='Arial', height = 0.10, pos = (0,0), wrapWidth = 50, color = 'Salmon', bold=True)
+word = visual.TextStim(win, text='XXXX', font='Arial', height = 0.20, pos = (0,-.2), wrapWidth = 50, color = '#1B1C96')
+task = visual.TextStim(win, text = 'XXXX', font='Arial', height = 0.10, pos = (0,0), wrapWidth = 50, color = '#11A08E')
+choice = visual.TextStim(win, text = '__', font='Arial', height = 0.10, pos = (0,0), wrapWidth = 50, color = '#ff7a5b', bold=True)
 
-arrow = visual.TextStim(win, text='XXXX', font='Arial', height = 0.20, pos = (0,0), color = 'Salmon')
-fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,0), color = 'SteelBlue')
-instruct = visual.TextStim(win, text = 'XXXX', height = 0.10, wrapWidth = 80, pos = (0,0), color = 'SteelBlue')
+arrow = visual.TextStim(win, text='XXXX', font='Arial', height = 0.20, pos = (0,0), color = '#ff7a5b')
+fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,0), color = '#1B1C96')
+instruct = visual.TextStim(win, text = 'XXXX', height = 0.10, wrapWidth = 80, pos = (0,0), color = '#1B1C96')
 
-prompt = visual.TextStim(win, text='XXXX', font='Arial', height = 0.20, pos = (0,0.3), wrapWidth = 50, color = 'Salmon')
-respond = visual.TextStim(win, text='RESPOND', font='Arial', height = 0.20, pos = (0,0.15), wrapWidth = 50, color = 'Salmon')
-scale = visual.TextStim(win, text='  1              2              3              4              5              6  ', height = 0.10, pos = (0,-0.15), wrapWidth = 50, color = 'SteelBlue')
-scale_labels = visual.TextStim(win, text='sure      probably    maybe     maybe    probably      sure', height = 0.10, pos = (0,-0.275), wrapWidth = 50, color = 'SteelBlue')
-scale_choices = visual.TextStim(win, text='XXXX', height = 0.15, pos = (0,-0.425), wrapWidth = 50, color = 'SteelBlue')
+prompt = visual.TextStim(win, text='XXXX', font='Arial', height = 0.20, pos = (0,0.2), wrapWidth = 50, color = '#ff7a5b')
+respond = visual.TextStim(win, text='RESPOND', font='Arial', height = 0.20, pos = (0,0.2), wrapWidth = 50, color = '#ff7a5b')
+scale = visual.TextStim(win, text='  1              2              3              4              5              6  ', height = 0.10, pos = (0,-0.2), wrapWidth = 50, color = '#1B1C96')
+scale_labels = visual.TextStim(win, text='Sure      Probably    Maybe     Maybe    Probably      Sure', height = 0.10, pos = (0,-0.35), wrapWidth = 50, color = '#1B1C96')
+scale_choices = visual.TextStim(win, text='XXXX', height = 0.20, pos = (0,-0.65), wrapWidth = 50, color = '#1B1C96')
 
 # Clocks
 RT = core.Clock()
@@ -197,7 +209,8 @@ def show_respond(r_dict,stage='expt'):
     retKeys = []
     frame = 0
 
-    scale_choices.setText(text='Old                                                          New')
+    scale_choices.setText(text='Old                      New')
+    scale_choices.setPos(newPos=(0,-0.65))
 
     while advance == 'false':
         retKeys = event.getKeys(keyList=[key_1,key_2,key_3,key_4,key_5,key_6,quit_key],timeStamped=RT)
@@ -212,27 +225,27 @@ def show_respond(r_dict,stage='expt'):
             ret_resp = retKeys[0][0]
             curr_RT = retKeys[0][1]
             choice.setText(text = '__')
-            choice.setColor('SeaGreen')
+            choice.setColor('#11A08E')
 
             if ret_resp == quit_key:
                 core.quit()
             elif ret_resp == key_1:
-                choice.setPos(newPos=(-0.63,-0.148))
+                choice.setPos(newPos=(-0.72,-0.2))
                 response = 1
             elif ret_resp == key_2:
-                choice.setPos(newPos=(-0.375,-0.148))
+                choice.setPos(newPos=(-0.425,-0.2))
                 response = 2
             elif ret_resp == key_3:
-                choice.setPos(newPos=(-.13,-0.148))
+                choice.setPos(newPos=(-0.14,-0.2))
                 response = 3
             elif ret_resp == key_4:
-                choice.setPos(newPos=(0.13,-0.148))
+                choice.setPos(newPos=(0.14,-0.2))
                 response = 4
             elif ret_resp == key_5:
-                choice.setPos(newPos=(0.375,-0.148))
+                choice.setPos(newPos=(0.425,-0.2))
                 response = 5
             elif ret_resp == key_6:
-                choice.setPos(newPos=(0.63, -.148))
+                choice.setPos(newPos=(0.72, -.2))
                 response = 6
             for frame in range(half_sec): # Show the choice onscreen for 500 ms
                 fix.draw()
@@ -262,7 +275,9 @@ def show_task_respond(r_dict):
     retKeys = []
     frame = 0
 
-    scale_choices.setText(text='Emotion?                                  Describes you?')
+    scale_choices.setText(text='Emotion              Describes\n\
+                                you')
+    scale_choices.setPos(newPos=(0,-0.65))
 
     while advance == 'false':
         retKeys = event.getKeys(keyList=[key_1,key_2,key_3,key_4,key_5,key_6,quit_key],timeStamped=RT)
@@ -277,27 +292,27 @@ def show_task_respond(r_dict):
             ret_resp = retKeys[0][0]
             curr_RT = retKeys[0][1]
             choice.setText(text = '__')
-            choice.setColor('SeaGreen')
+            choice.setColor('#11A08E')
 
             if ret_resp == quit_key:
                 core.quit()
             elif ret_resp == key_1:
-                choice.setPos(newPos=(-0.63,-0.148))
+                choice.setPos(newPos=(-0.72,-0.2))
                 response = 1
             elif ret_resp == key_2:
-                choice.setPos(newPos=(-0.375,-0.148))
+                choice.setPos(newPos=(-0.425,-0.2))
                 response = 2
             elif ret_resp == key_3:
-                choice.setPos(newPos=(-.22,-0.148))
+                choice.setPos(newPos=(-0.14,-0.2))
                 response = 3
             elif ret_resp == key_4:
-                choice.setPos(newPos=(0.22,-0.148))
+                choice.setPos(newPos=(0.14,-0.2))
                 response = 4
             elif ret_resp == key_5:
-                choice.setPos(newPos=(0.375,-0.148))
+                choice.setPos(newPos=(0.425,-0.2))
                 response = 5
             elif ret_resp == key_6:
-                choice.setPos(newPos=(0.63, -.148))
+                choice.setPos(newPos=(0.72, -.2))
                 response = 6
             for frame in range(half_sec): # Show the choice onscreen for 500 ms
                 fix.draw()
@@ -319,11 +334,12 @@ def show_ret_item(r_dict):
     allKeys = []
     curr_item = r_dict['word']
     status = r_dict['status']
+    val = r_dict['val']
     task = r_dict['task']
     word.setText(text=curr_item)
 
     for frames in range(3*fps):
-#        fix.draw()
+        fix.draw()
         prompt.draw()
         word.draw()
         win.flip()
@@ -332,7 +348,7 @@ def show_ret_item(r_dict):
         this = allKeys[0][0]
         if this == quit_key:
             core.quit()
-    return (curr_item, status, task)
+    return (curr_item, val, status, task)
     
 def show_ret_task(r_dict):
     '''Display item at retrieval for 3000 ms'''
@@ -344,7 +360,7 @@ def show_ret_task(r_dict):
     word.setText(text=curr_item)
 
     for frames in range(3*fps):
-#        fix.draw()
+        fix.draw()
         prompt.draw()
         word.draw()
         win.flip()
@@ -355,41 +371,98 @@ def show_ret_task(r_dict):
             core.quit()
     return ()
     
-# Instructions
-r_instructions = ['Welcome! Today we will be testing your memory \nfor the words that you saw yesterday.\n\nPress 1 to advance.',
 
-'You will see a series of words, \nsome of which you saw yesterday and some new words.\n\nPress 1 to advance.',
+trial = 1
 
-'When you see the "Old or New" prompt, try\nto remember:\n\nDid you see the word yesterday?\n\nPress 1 to advance.',
+if session == 1:
+    # Instructions
+    r_instructions = ['Welcome! Today we will be testing your memory. \n\nPress 1 to advance.',
+    'We will show you all of the words \nyou saw yesterday. \n\nSince you have seen them before, \nthey are considered "OLD".\n\nPress 1 to advance.',
+    'We will mix them up with words \nyou have not seen before. \n\nSince you have not seen them before,\nthey are considered "NEW".\n\nPress 1 to advance.',
+    'When you see the "Old or New" prompt, try\nto remember:\n\nDid you see the word yesterday?\n\nPress 1 to advance.',
+    'The prompts will appear above a cross,\nand the words will appear below the cross.\n\nTry to keep your eyes on the cross, to\nlimit extra eye movement.'
+    '\n\nPress 1 to advance.',
+    'After 3.5 seconds, another screen \nwill come up that says "RESPOND". \n\nThis is where you will choose \n"OLD" or "NEW". \n\nPress 1 to advance.',
+    'If you select "OLD", a new screen will come up \
+    \nwith the prompt "QUESTION" above a cross,\
+    \nand the word shown again below the cross.\
+    \n\nWhen you see this prompt, try to remember: \
+    \n\nWhich question was asked about this word yesterday? \
+    \n\nPress 1 to advance.',
+    'After 3.5 seconds, another screen \nwill come up that says "RESPOND". \n\nThis is where you will choose \nwhich question you answered\nfor that word yesterday:\n\n"Emotion?" or "Describes you?" \
+    \n\nPress 1 to advance.',
+    'Does this make sense to you?\n\nIf you have any questions, please ask now.\n\nOtherwise, press 1 to advance.',
+    'Please try your best.\n\nWe will record your brain activity\nas you try to remember.\n\nThe ideal time to blink is when\nyou are responding.\
+    \n\nPress 1 to advance.',
+    'Any questions? If so, please ask now.\n\nWe are going to do practice trials\nbefore we start the experiment.\n\nWhen you are ready, press 1 to start.']
+    
+    show_instruct(r_instructions)
+    
+    # Practice trials
+    r_prac = [{'word': 'faker', 'status':'old', 'task':'emotion', 'prompt' :'Old or New?'}, {'word' : 'grateful', 'status':'new','task':'','prompt' : 'Old or New?'}, {'word' : 'generous', 'status': 'old', 'task':'emotion','prompt' : 'Old or New?'}, 
+    {'word' : 'clingy', 'status':'new', 'task':'','prompt' : 'Old or New?'}]
+    word.setPos((0,-0.15))
+    
+    for frame in range(2*fps): # Warm-up fixation
+        fix.draw()
+        win.flip()
 
-'If you select that you have seen the word before, \nyou will be directed When you see the "Question?" prompt, try to\nremember which question you answered\nfor that word:\n\n"Emotion?" or "Describes you?"\n\nPress 1 to \
-advance.',
+    for r_dict in r_prac:
+        show_prompt(r_dict)
+        item, status, task = show_ret_item(r_dict)
+        recog_resp, recog_rt = show_respond(r_dict)
+        if recog_resp == 1 or recog_resp == 2:
+            show_ret_task(r_dict)
+            task_resp, task_rt = show_task_respond(r_dict)
+    else:
+        task_resp = ''
+        task_rt = 999
+    iti_durs = show_ITI()
 
-'\n\nRespond by pressing buttons 1 through 6.',
+    # practice instructions before starting experimental trials
+    fp_instructions = ['You have finished the practice trial.\n\nDo you have any questions?\nIf so, please ask now.\n\nWhen you are ready,\npress 1 to advance.',
+    'We are ready to begin the 1st block.\n\nIt will be identical to the practice study,\nbut you will see 50 words rather than 4.\n\nWhen you are ready to begin, press 1.']
 
-'Try to look at the middle of the screen, \nat the cross, whenever the RESPOND screen is not up.',
+    show_instruct(fp_instructions)
+    
+else:
+    r2_instructions = ['We are ready to begin the second block of trials.\n\nDo you have any questions? If so, please ask now.\n\nWhen you are ready, press 1 to advance.',
+    'The second block will be identical to the first block.\n\nWhen you are ready to begin press 1.']
+    
+    show_instruct(r2_instructions)
+    
+    #open output file for writing the retrieval data
+    ret_file = path2data + subject + '_StressMem_Retrieval_Session2_' + expInfo['Date']
+    ret_file = open(ret_file + '.csv', 'w')
+    ret_file.write('subject,session,trial,word,val,status,recog_resp,recog_rt,task,task_resp,task_rt,iti_dur\n') 
+    for r_dict in session_2_lists:
+        show_prompt(r_dict)
+        item, val, status, task = show_ret_item(r_dict)
+        recog_resp, recog_rt = show_respond(r_dict)
+        if recog_resp == 1 or recog_resp == 2:
+            show_ret_task(r_dict)
+            task_resp, task_rt = show_task_respond(r_dict)
 
-'Does this make sense to you?\n\nIf you have any questions, please ask now.\n\nOtherwise, press 1 to advance.',
+        else:
+            task_resp = ''
+            task_rt = 999
+        iti_durs = show_ITI()
 
-'Please try your best.\n\nWe will record your brain activity\nas you try to remember.\n\nThe ideal time to blink is when\nyou are responding.\n\nPress 1 to \
-advance.',
-
-'Any questions? If so, please ask now.\n\nWhen you are ready, press 1 to start.']
-
-show_instruct(r_instructions)
-
+        ret_file.write('%s,%i,%i,%s,%s,%s,%i,%.3f,%s,%s,%.3f,%i\n' %(subject,session,trial,item,val,status,recog_resp,recog_rt,task,task_resp,task_rt,iti_durs))
+        trial = trial + 1
+    ret_file.close()
 
 trial = 1
 
 if session == 1:
     #open output file for writing the retrieval data
-    ret_file = subject + '_StressMem_Retrieval_Session1_' + expInfo['Date']
+    ret_file = path2data + subject + '_StressMem_Retrieval_Session1_' + expInfo['Date']
     ret_file = open(ret_file + '.csv', 'w')
-    ret_file.write('subject,session,trial,word,status,recog_resp,recog_rt,task,task_resp,task_rt,iti_dur\n') 
-
+    ret_file.write('subject,session,trial,word,val,status,recog_resp,recog_rt,task,task_resp,task_rt,iti_dur\n') 
     for r_dict in session_1_lists:
+        print(r_dict)
         show_prompt(r_dict)
-        item, status, task = show_ret_item(r_dict)
+        item, val, status, task = show_ret_item(r_dict)
         recog_resp, recog_rt = show_respond(r_dict)
         if recog_resp == 1 or recog_resp == 2:
             show_ret_task(r_dict)
@@ -400,26 +473,6 @@ if session == 1:
             task_rt = 999
         iti_durs = show_ITI()
 
-        ret_file.write('%s,%i,%i,%s,%s,%i,%.3f,%s,%s,%.3f,%i\n' %(subject,session,trial,item,status,recog_resp,recog_rt,task,task_resp,task_rt,iti_durs))
-        trial = trial + 1
-else:
-    #open output file for writing the retrieval data
-    ret_file = subject + '_StressMem_Retrieval_Session2_' + expInfo['Date']
-    ret_file = open(ret_file + '.csv', 'w')
-    ret_file.write('subject,session,trial,word,status,recog_resp,recog_rt,task,task_resp,task_rt,iti_dur\n') 
-    for r_dict in session_2_lists:
-        show_prompt(r_dict)
-        item, status, task = show_ret_item(r_dict)
-        recog_resp, recog_rt = show_respond(r_dict)
-        if recog_resp == 1 or recog_resp == 2:
-            show_ret_task(r_dict)
-            task_resp, task_rt = show_task_respond(r_dict)
-
-        else:
-            task_resp = ''
-            task_rt = 999
-        iti_durs = show_ITI()
-
-        ret_file.write('%s,%i,%i,%s,%s,%i,%.3f,%s,%s,%.3f,%i\n' %(subject,session,trial,item,status,recog_resp,recog_rt,task,task_resp,task_rt,iti_durs))
+        ret_file.write('%s,%i,%i,%s,%s,%s,%i,%.3f,%s,%s,%.3f,%i\n' %(subject,session,trial,item,val,status,recog_resp,recog_rt,task,task_resp,task_rt,iti_durs))
         trial = trial + 1
 ret_file.close()
