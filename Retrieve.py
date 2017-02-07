@@ -133,11 +133,12 @@ quit_key = 'q'
 
 # Recurring stimuli
 word = visual.TextStim(win, text='XXXX', font='Arial', height = 0.20, pos = (0,-.2), wrapWidth = 50, color = '#1B1C96')
-task = visual.TextStim(win, text = 'XXXX', font='Arial', height = 0.10, pos = (0,0), wrapWidth = 50, color = '#11A08E')
+task = visual.TextStim(win, text = 'XXXX', font='Arial', height = 0.10, pos = (0,0), wrapWidth = 50, color = 'MediumTurquoise')
 choice = visual.TextStim(win, text = '__', font='Arial', height = 0.10, pos = (0,0), wrapWidth = 50, color = '#ff7a5b', bold=True)
+no_resp = visual.TextStim(win, text='NO RESPONSE', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = 'black')
 
 arrow = visual.TextStim(win, text='XXXX', font='Arial', height = 0.20, pos = (0,0), color = '#ff7a5b')
-fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,0), color = '#1B1C96')
+fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,0), color = 'black')
 instruct = visual.TextStim(win, text = 'XXXX', height = 0.10, wrapWidth = 80, pos = (0,0), color = '#1B1C96')
 
 prompt = visual.TextStim(win, text='XXXX', font='Arial', height = 0.20, pos = (0,0.2), wrapWidth = 50, color = '#ff7a5b')
@@ -185,10 +186,17 @@ def show_ITI():
         win.flip()
 
     return duration*refresh
+    
+def show_no_resp():
+    '''Show the text "no response"'''
+    for frames in range(3*fps):
+        no_resp.draw()
+        win.flip()
 
 def show_prompt(r_dict):
     '''Display retrieval prompt for 1000 ms'''
     prompt.setText(text='Old or New?')
+    prompt.setColor(color = '#ff7a5b')
     
 #NETSTATION HERE
 
@@ -208,11 +216,15 @@ def show_respond(r_dict,stage='expt'):
     RT.reset()
     retKeys = []
     frame = 0
+    scale_choices.setColor(color = '#1B1C96')
+    scale_labels.setColor(color = '#1B1C96')
+    scale.setColor(color = '#1B1C96')
+    respond.setColor(color = '#ff7a5b')
 
     scale_choices.setText(text='Old                      New')
     scale_choices.setPos(newPos=(0,-0.65))
 
-    while advance == 'false':
+    while frame < (10*fps) and advance == 'false':
         retKeys = event.getKeys(keyList=[key_1,key_2,key_3,key_4,key_5,key_6,quit_key],timeStamped=RT)
         fix.draw()
         respond.draw()
@@ -220,6 +232,7 @@ def show_respond(r_dict,stage='expt'):
         scale_labels.draw()
         scale_choices.draw()
         win.flip()
+        frame = frame + 1
 
         if retKeys:
             ret_resp = retKeys[0][0]
@@ -277,9 +290,14 @@ def show_task_respond(r_dict):
 
     scale_choices.setText(text='Emotion              Describes\n\
                                 you')
+    scale_choices.setColor(color = 'DarkSlateGrey')
     scale_choices.setPos(newPos=(0,-0.65))
+    scale_labels.setColor(color = 'DarkSlateGrey')
+    scale.setColor(color = 'DarkSlateGrey')
+    word.setColor(color = 'DarkSlateGrey')
+    respond.setColor(color = 'MediumTurquoise')
 
-    while advance == 'false':
+    while frame < (10*fps) and advance == 'false':
         retKeys = event.getKeys(keyList=[key_1,key_2,key_3,key_4,key_5,key_6,quit_key],timeStamped=RT)
         fix.draw()
         respond.draw()
@@ -287,6 +305,7 @@ def show_task_respond(r_dict):
         scale_labels.draw()
         scale_choices.draw()
         win.flip()
+        frame = frame + 1
 
         if retKeys:
             ret_resp = retKeys[0][0]
@@ -322,7 +341,6 @@ def show_task_respond(r_dict):
                 scale_choices.draw()
                 choice.draw()
                 win.flip()
-
             for frame in range(fps): # Add 1000 ms fixation before the ITI, to regain fixation between trials.
                 fix.draw()
                 win.flip()
@@ -336,7 +354,9 @@ def show_ret_item(r_dict):
     status = r_dict['status']
     val = r_dict['val']
     task = r_dict['task']
+    prompt.setColor(color = '#ff7a5b')
     word.setText(text=curr_item)
+    word.setColor(color = '#1B1C96')
 
     for frames in range(3*fps):
         fix.draw()
@@ -351,13 +371,15 @@ def show_ret_item(r_dict):
     return (curr_item, val, status, task)
     
 def show_ret_task(r_dict):
-    '''Display item at retrieval for 3000 ms'''
+    '''Display source prompt for 3000 ms'''
     allKeys = []
     curr_item = r_dict['word']
     status = r_dict['status']
     task = r_dict['task']
     prompt.setText(text = 'Question?')
+    prompt.setColor(color = 'MediumTurquoise')
     word.setText(text=curr_item)
+    word.setColor('DarkSlateGrey')
 
     for frames in range(3*fps):
         fix.draw()
@@ -399,8 +421,8 @@ if session == 1:
     show_instruct(r_instructions)
     
     # Practice trials
-    r_prac = [{'word': 'faker', 'status':'old', 'task':'emotion', 'prompt' :'Old or New?'}, {'word' : 'grateful', 'status':'new','task':'','prompt' : 'Old or New?'}, {'word' : 'generous', 'status': 'old', 'task':'emotion','prompt' : 'Old or New?'}, 
-    {'word' : 'clingy', 'status':'new', 'task':'','prompt' : 'Old or New?'}]
+    r_prac = [{'word': 'faker', 'status':'old', 'task':'emotion', 'prompt' :'Old or New?', 'val': 'prac'}, {'word' : 'grateful', 'status':'new','task':'','prompt' : 'Old or New?', 'val': 'prac'}, {'word' : 'generous', 'status': 'old', 'val': 'prac', 'task':'emotion','prompt' : 'Old or New?'}, 
+    {'word' : 'clingy', 'status':'new', 'task':'','prompt' : 'Old or New?', 'val': 'prac'}]
     word.setPos((0,-0.15))
     
     for frame in range(2*fps): # Warm-up fixation
@@ -409,11 +431,20 @@ if session == 1:
 
     for r_dict in r_prac:
         show_prompt(r_dict)
-        item, status, task = show_ret_item(r_dict)
+        item, val, status, task = show_ret_item(r_dict)
         recog_resp, recog_rt = show_respond(r_dict)
         if recog_resp == 1 or recog_resp == 2:
             show_ret_task(r_dict)
             task_resp, task_rt = show_task_respond(r_dict)
+            if task_resp == 999:
+                show_no_resp()
+        elif recog_resp == 999:
+            show_no_resp()
+        else:
+            task_resp = ''
+            task_rt = 999.0
+        iti_durs = show_ITI()
+        
     else:
         task_resp = ''
         task_rt = 999
@@ -442,10 +473,13 @@ else:
         if recog_resp == 1 or recog_resp == 2:
             show_ret_task(r_dict)
             task_resp, task_rt = show_task_respond(r_dict)
-
+            if task_resp == 999:
+                show_no_resp()
+        elif recog_resp == 999:
+            show_no_resp()
         else:
             task_resp = ''
-            task_rt = 999
+            task_rt = 999.0
         iti_durs = show_ITI()
 
         ret_file.write('%s,%i,%i,%s,%s,%s,%i,%.3f,%s,%s,%.3f,%i\n' %(subject,session,trial,item,val,status,recog_resp,recog_rt,task,task_resp,task_rt,iti_durs))
@@ -467,10 +501,14 @@ if session == 1:
         if recog_resp == 1 or recog_resp == 2:
             show_ret_task(r_dict)
             task_resp, task_rt = show_task_respond(r_dict)
+            if task_resp == 999:
+                show_no_resp()
+        elif recog_resp == 999:
+            show_no_resp()
 
         else:
             task_resp = ''
-            task_rt = 999
+            task_rt = 999.0
         iti_durs = show_ITI()
 
         ret_file.write('%s,%i,%i,%s,%s,%s,%i,%.3f,%s,%s,%.3f,%i\n' %(subject,session,trial,item,val,status,recog_resp,recog_rt,task,task_resp,task_rt,iti_durs))
