@@ -1,3 +1,4 @@
+
 import numpy as np
 import pandas as pd
 import random, sys
@@ -14,8 +15,6 @@ print (sys.path)
 
 path2words = '/Users/mlm2/Work/Expts/StressMem/Stimuli/'
 path2data = '/Users/mlm2/Work/Expts/StressMem/Data/'
-
-
 
 # GUI for subject number and date
 try:
@@ -41,8 +40,34 @@ if os.path.isfile(path2data + 'Encoded_words/encoded_words_' + subject + '.csv')
     else:
         core.quit()
 
-# Create and save the encoding lists
+# Window
+# Switch to full, no GUI, and EEG_booth
+wintype='pyglet' 
+win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Elyssa Mac', color = 'Ivory', winType=wintype, units = 'norm')
+#win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Dan Mac', color = 'Ivory', winType=wintype, units = 'cm')
+#win=visual.Window([1920, 1080],fullscr=True, allowGUI=False, monitor='MLMmonitor', units='pix') 
 
+# Buttons
+key_1 = 'c'
+key_5 = 'm'
+pause_key = 'p' # Advance screen following EEG net placement and QC
+quit_key = 'q'
+
+# Recurring stimuli
+word = visual.TextStim(win, text='XXX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#1B1C96')
+task = visual.TextStim(win, text = 'XX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#11A08E')
+choice = visual.TextStim(win, text = '_______', font='Arial', height = 0.15, pos = (0,-.29), wrapWidth = 50, color = '#ff7a5b', bold=True)
+instruct = visual.TextStim(win, text = 'XX', height = 0.10, wrapWidth = None, pos = (0,0), color = '#1B1C96')
+fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,0), color = '#1B1C96')
+instruct = visual.TextStim(win, text = 'XXXX', height = 0.10, wrapWidth = None, pos = (0,0), color = '#1B1C96')
+options = visual.TextStim(win, text = 'XXXX', font='Arial', height = 0.15, pos = (0,-.27), wrapWidth = 50, color = '#ff7a5b', bold=True)
+no_resp = visual.TextStim(win, text='NO RESPONSE', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = 'black')
+begin_typing = visual.TextStim(win, text='Begin Typing', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = 'black')
+
+#key_sound = sound.SoundPygame('stim.wav')
+#stim_sound = sound.SoundPygame('resp.wav')
+
+# Create and save the encoding lists
 df = pd.read_csv(path2words + 'balanced_words_option8_WORKING.csv')
 df = df[['Word', 'val']]
 
@@ -65,41 +90,15 @@ enc_lists = df_encoded.T.to_dict().values() # turn them into lists of dicts
 random.shuffle(enc_lists) # shuffles the list of dicts
 random.shuffle(enc_lists) # extra shuffled
 
+recall_file = expInfo['SubjectID'] + '_' + expInfo['Date']
+recall_file = open(path2data + recall_file+'_Recall' +'.csv', 'w')
+recall_file.write('')
+
 #print (enc_lists)
 # Refresh rate
 refresh = 16.7
 fps = int(np.ceil(1000/refresh)) # fps = flips per second; done this way in case refresh rate changes
 half_sec = int(0.5*fps)
-
-# Window
-# Switch to full, no GUI, and EEG_booth
-wintype='pyglet' 
-#win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Elyssa Mac', color = 'Ivory', winType=wintype, units = 'cm')
-#win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Dan Mac', color = 'Ivory', winType=wintype, units = 'cm')
-#win=visual.Window([1920, 1080],fullscr=True, allowGUI=False, monitor='MLMmonitor', units='pix')
-win = visual.Window([1024,768], fullscr = False, allowGUI = False, monitor = 'testMonitor', color = '#fffff7', winType=wintype, units = 'norm')
-#win = visual.Window([1024,768], fullscr = True, allowGUI = False, monitor = 'EEG_booth', color = 'Ivory', winType=wintype, units = 'norm') 
-
-# Buttons
-key_1 = 'c'
-key_2 = 'v'
-key_3 = 'b'
-key_4 = 'n'
-key_5 = 'm'
-pause_key = 'p' # Advance screen following EEG net placement and QC
-quit_key = 'q'
-
-# Recurring stimuli
-word = visual.TextStim(win, text='XXX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#1B1C96')
-task = visual.TextStim(win, text = 'XX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#11A08E')
-choice = visual.TextStim(win, text = '_____', font='Arial', height = 0.15, pos = (0,-.29), wrapWidth = 50, color = '#ff7a5b', bold=True)
-instruct = visual.TextStim(win, text = 'XX', height = 0.10, wrapWidth = None, pos = (0,0), color = '#1B1C96')
-fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,0), color = '#1B1C96')
-instruct = visual.TextStim(win, text = 'XXXX', height = 0.10, wrapWidth = None, pos = (0,0), color = '#1B1C96')
-options = visual.TextStim(win, text = 'XXXX', font='Arial', height = 0.15, pos = (0,-.27), wrapWidth = 50, color = '#ff7a5b', bold=True)
-
-#key_sound = sound.SoundPygame('click_quiet.ogg')
-#stim_sound = sound.SoundPygame('cards2.ogg')
 
 # Clocks
 RT = core.Clock()
@@ -128,78 +127,120 @@ def show_instruct(instruct_list, adv_key=key_1, quit=quit_key):
         
                     elif resp == quit_key:
                         core.quit()
+
+def free_recall():
+    chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+    text = visual.TextStim(win, height=(.10), wrapWidth=(.9),color='Black',text='')
+    file_text = visual.TextStim(win, height=(.10), wrapWidth=(.9),color='Black',text='')
+
+#   Loop until return is pressed
+    endTrial = False
+    while not endTrial:
+    # Wait for response...
+        writing = event.getKeys() #used to be event.waitKeys
+        if writing:
+            print writing
+        # If backspace, delete last character
+            if writing[0] == 'backspace':
+                text.setText(text.text[:-1])
+                file_text.setText(file_text.text[:-1])
+        # If return, end trial
+            elif writing[0] == 'return':
+                text.setText(text.text + '\n')
+                file_text.setText(file_text.text + '\n')
+        # Insert space
+            elif writing[0] == 'space':
+                text.setText(text.text + ' ')
+                file_text.setText(file_text.text + '\n')
+        # Else if a letter, append to text:
+            elif writing[0] in chars:
+                text.setText(text.text + writing[0])
+                file_text.setText(file_text.text + writing[0])
+        # If escape, abort the experiment
+            elif writing[0]=='escape':
+                endTrial = True
+        elif text.text == '':
+            begin_typing.draw()
+    # Display updated text
+        text.draw()
+        win.flip()
+    recall_file.write(file_text.text)
+
 def show_enc_item(in_dict):
     '''Display encoding item and encoding task for 1 second'''
-    question = in_dict['Question']
+    Question = in_dict['Question']
     curr_item = in_dict['Word']
-    task.setText(text=question)
+    task.setText(text=Question)
 
     task.setPos(newPos=(0,.3))
     task.setPos(newPos=(0,.3))
     word.setText(text=curr_item)
     word.setPos(newPos=(0,0))
-    if question == 'Describes you?':
-        curr_task = 'describes_you'
+    if Question == 'Describes you?':
+        curr_task = 'Describes_you'
         options.setText('Yes (1)     No (5)')
-    elif question == 'Emotion':
-        curr_task = 'emotion'
+    elif Question == 'Emotion':
+        curr_task = 'Emotion'
         options.setText('Positive (1)     Negative (5)')
 
     for frame in range(2*fps):
         word.draw()
         task.draw()
-        #options.draw()
         win.flip()
 
     return curr_item
 
+def show_no_resp():
+    '''Show the text "no response"'''
+    for frames in range(2*fps):
+        no_resp.draw()
+        win.flip()
 
 def show_enc_full(in_dict):
     '''Display encoding item, encoding task, and options for 10 seconds or until response'''
     response = 'no_response'
     curr_RT = 999.0
-    question = in_dict['Question']
+    Question = in_dict['Question']
     curr_item = in_dict['Word']
     curr_type = in_dict['val']
     word.setText(text=curr_item)
-    choice.setColor('Salmon')
+    choice.setColor('#ff7a5b')
     advance = 'false'
-
+    
     word.setPos(newPos=(0,0))
-
+    
     event.clearEvents()
     RT.reset()
     allKeys = []
     frame = 0
-#    stim_sound.play()
-
+    #stim_sound.play()
+    
     while frame < (10*fps) and advance == 'false':
         allKeys = event.getKeys(keyList=[key_1, key_5, quit_key],timeStamped=RT)
-        #arrow.draw()
         task.draw()
         word.draw()
         options.draw()
         win.flip()
-
+        
         if allKeys:
             enc_resp = allKeys[0][0]
             curr_RT = allKeys[0][1]
 
             if enc_resp == key_1:
                 advance = 'true'
-#               key_sound.play()
-                if question == 'emotion':
+                #key_sound.play()
+                frame = 0
+                if Question == 'Emotion':
                     response = 'positive'
-                    choice.setText('________')
-                    choice.setPos(newPos=(-.33, .27))
-                    advance = 'true'
-                if question == 'describes you?':
+                    choice.setText('__________')
+                    choice.setPos(newPos=(-0.30, -0.27))
+                    #advance = 'true'
+                if Question == 'Describes you?':
                     response = 'yes'
-                    choice.setText('____')
-                    choice.setPos(newPos=(-.29, .27))
-                    advance = 'true'
-                while frame < (fps) and advance =='false':
-                    #arrow.draw()
+                    choice.setText('______')
+                    choice.setPos(newPos=(-0.18, -0.27))
+                    #advance = 'true'
+                while frame < (3*half_sec):
                     task.draw()
                     word.draw()
                     options.draw()
@@ -209,17 +250,17 @@ def show_enc_full(in_dict):
                     
             elif enc_resp == key_5:
                 advance = 'true'
-#                key_sound.play()
-                if question == 'emotion':
+                #key_sound.play()
+                frame = 0
+                if Question == 'Emotion':
                     response = 'negative'
-                    choice.setText('________')
-                    choice.setPos(newPos=(.31, .27))
-                if question == 'describes you?':
+                    choice.setText('__________')
+                    choice.setPos(newPos=(.28, -.27))
+                if Question == 'Describes you?':
                     response = 'no'
-                    choice.setText('____')
-                    choice.setPos(newPos=(.31, .27))
-                while frame < (7*half_sec):
-                    #arrow.draw()
+                    choice.setText('_____')
+                    choice.setPos(newPos=(.20, -.27))
+                while frame < (3*half_sec):
                     task.draw()
                     word.draw()
                     options.draw()
@@ -236,23 +277,21 @@ def show_enc_full(in_dict):
 def show_task(in_dict):
     '''Present arrow and encoding task for 500 ms'''
 
-    question = in_dict['Question']
-    task.setText(text=question)
+    Question = in_dict['Question']
+    task.setText(text=Question)
 
     task.setPos(newPos=(0,.3))
     task.setPos(newPos=(0,.3))
 
-    if question == 'Describes you?':
-        curr_task = 'describes_you'
+    if Question == 'Describes you?':
+        curr_task = 'Describes_you'
         options.setText('Yes (1)     No (5)')
-    elif question == 'Emotion':
-        curr_task = 'emotion'
+    elif Question == 'Emotion':
+        curr_task = 'Emotion'
         options.setText('Positive (1)     Negative (5)')
 
     for frame in range(half_sec):
-        #arrow.draw()
         task.draw()
-        #options.draw()
         win.flip()
 
     return curr_task
@@ -290,7 +329,6 @@ def show_break():
     return duration*refresh
 
 
-
 # Instructions
 enc_instructions = ['Welcome!\n\nIn this task, words will appear on the screen in front of you. \
 \n\nAfter each word is presented, you will be asked one of two questions about the word,\nand you will respond by pressing a button.\
@@ -304,11 +342,19 @@ or relates to you. \
 \n\nPress button 1 to begin the practice trials.']
 final_enc_instructions = ['Do you have any final questions?\n\nIf not, press 1 to begin the task']
 
-break_instructions = 'Good job! You are halfway through this task. The next part of the task is exactly the same as before. Take a minute or two to stretch your \
-legs if you would like, and press 1 to move on to the second half of the task when you are ready.\n\nThis screen will advance automatically in 30 seconds, and then you \
-will be able to advance to the second half of the task when you are ready.'
+break_instructions = 'Good job! You are halfway through this task. \
+\n\nThis screen will advance after a short break, and then you will be able \
+to advance to the second half of the task when you are ready.'
 
 break_instructions_2 = ['Press 1 to begin the second half of the task']
+
+recall_instructions = ['Great job! You are finished with that portion of the task. \n\n \
+On the next screen, please type all of the words that you can remember seeing from the previous part of \
+the task. You may hit space to start a new word, and enter when you have reached the end of the line.\n\n \
+Press the "escape" key when you have finished typing all of the words that you can remember. \n\n \
+Press 1 to begin.']
+
+end_instructions = ['Great job! You are finished with this task.\n\nThe experimenter will be in shortly']
 
 # Practice Stimuli
 pract1 = {'Word': 'faker', 'val' : '1', 'Question': 'Emotion'}
@@ -321,10 +367,12 @@ pract_trials = [pract1, pract2, pract3, pract4]
 show_instruct(enc_instructions)
 
 for dict in pract_trials:
-    show_task(dict)
-    show_enc_item(dict)
-    show_enc_full(dict)
-    show_ITI()
+    curr_task = show_task(dict)
+    curr_item = show_enc_item(dict)
+    curr_type, response, curr_RT = show_enc_full(dict)
+    if curr_RT == 999.0:
+        show_no_resp()
+    fix_duration = show_ITI() 
 show_instruct(final_enc_instructions)
 
 # RUN EXPERIMENTAL TRIALS
@@ -340,6 +388,8 @@ for dict in enc_lists:
     curr_task = show_task(dict)
     curr_item = show_enc_item(dict)
     curr_type, response, curr_RT = show_enc_full(dict)
+    if curr_RT == 999.0:
+        show_no_resp()
     fix_duration = show_ITI() 
 
     # Record trial data
@@ -354,7 +404,10 @@ random.shuffle(enc_lists) #shuffle the list
 for dict in enc_lists: #repeat the procedure
     block = 2
     curr_task = show_task(dict)
-    curr_item, curr_type, response, curr_RT = show_enc_item(dict)
+    curr_item = show_enc_item(dict)
+    curr_type, response, curr_RT = show_enc_full(dict)
+    if curr_RT == 999.0:
+        show_no_resp()
     fix_duration = show_ITI() 
 
     # Record trial data
@@ -364,6 +417,7 @@ for dict in enc_lists: #repeat the procedure
     trial = trial + 1
 enc_file.close()
 
-for frames in range(fps):
-    fix.draw()
-    win.flip()
+show_instruct(recall_instructions)
+free_recall()
+recall_file.close()
+show_instruct(end_instructions)

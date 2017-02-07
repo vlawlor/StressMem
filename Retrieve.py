@@ -440,6 +440,8 @@ if session == 1:
                 show_no_resp()
         elif recog_resp == 999:
             show_no_resp()
+            task_resp = ''
+            task_rt = 999.0
         else:
             task_resp = ''
             task_rt = 999.0
@@ -477,6 +479,8 @@ else:
                 show_no_resp()
         elif recog_resp == 999:
             show_no_resp()
+            task_resp = ''
+            task_rt = 999.0
         else:
             task_resp = ''
             task_rt = 999.0
