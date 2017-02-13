@@ -471,7 +471,7 @@ if session == 1:
     iti_durs = show_ITI()
 
     # practice instructions before starting experimental trials
-    fp_instructions = ['You have finished the practice trial.\n\nDo you have any questions?\nIf so, please ask now.\n\nWhen you are ready,\npress 1 to advance.',
+    fp_instructions = ['You have finished the practice trials.\n\nDo you have any questions?\nIf so, please ask now.\n\nWhen you are ready,\npress 1 to advance.',
     'We are ready to begin the 1st block.\n\nIt will be identical to the practice study,\nbut you will see 50 words rather than 4.\n\nWhen you are ready to begin, press 1.']
 
     show_instruct(fp_instructions)
