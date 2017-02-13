@@ -1,20 +1,22 @@
+# Last updated: Feburary 13, 2017
+# Authors: Victoria Lawlor, Elyssa Barrick, and Dan Dillon
+# Runs encoding for the StressMem experiment.
 
 import numpy as np
 import pandas as pd
-import random, sys
-import os.path
+import getpass, os, random, sys,
 from random import shuffle
 from psychopy import prefs
 prefs.general['audioLib'] = ['pygame']
-from psychopy import sound
-from psychopy import core, data, event, gui, misc, visual
+from psychopy import core, data, event, gui, misc, sound, visual
 
 print (pd.__version__)
 print (sys.version)
 print (sys.path)
 
-path2words = '/Users/mlm2/Work/Expts/StressMem/Stimuli/'
-path2data = '/Users/mlm2/Work/Expts/StressMem/Data/'
+userName = getpass.getuser()
+path2words = '/Users/' + userName + '/Work/Expts/StressMem/PsychoPy/Stimuli/'
+path2data = '/Users/' + userName + '/Work/Expts/StressMem/Data/'
 
 # GUI for subject number and date
 try:
