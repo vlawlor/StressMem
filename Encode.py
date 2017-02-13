@@ -1,32 +1,37 @@
+# Last updated: Feburary 13, 2017
+# Authors: Victoria Lawlor, Elyssa Barrick, and Dan Dillon
+# Runs encoding for the StressMem experiment.
 
+# User, you may need/want to edit the next several lines
+import getpass, os, random, sys
+refresh = 16.7
+userName = getpass.getuser()
+monitorName = 'Dan Mac'
+path2words = '/Users/' + userName + '/Work/Expts/StressMem/PsychoPy/Stimuli/'
+path2data = '/Users/' + userName + '/Work/Expts/StressMem/Data/'
+
+# Shouldn't need to edit below . . . 
 import numpy as np
 import pandas as pd
-import random, sys
-import os.path
 from random import shuffle
 from psychopy import prefs
 prefs.general['audioLib'] = ['pygame']
-from psychopy import sound
-from psychopy import core, data, event, gui, misc, visual
+from psychopy import core, data, event, gui, misc, sound, visual
 
-print (pd.__version__)
-print (sys.version)
-print (sys.path)
-
-path2words = '/Users/mlm2/Work/Expts/StressMem/Stimuli/'
-path2data = '/Users/mlm2/Work/Expts/StressMem/Data/'
+#print (pd.__version__)
+#print (sys.version)
+#print (sys.path)
 
 # GUI for subject number and date
 try:
     expInfo = misc.fromFile('StressMemlastParams.pickle')
 except:
     expInfo = {'SubjectID':'999' }
-
 expInfo['Date'] = data.getDateStr()
 
 dlg = gui.DlgFromDict(expInfo, title='StressMem', fixed=['Date'])
 if dlg.OK:
-    misc.toFile('StressMemlastParams.pickle', expInfo) 
+    misc.toFile('StressMemLastParams.pickle', expInfo) 
 else:
     core.quit()
 subject = expInfo['SubjectID']
@@ -41,11 +46,8 @@ if os.path.isfile(path2data + 'Encoded_words/encoded_words_' + subject + '.csv')
         core.quit()
 
 # Window
-# Switch to full, no GUI, and EEG_booth
 wintype='pyglet' 
-win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Elyssa Mac', color = '#FFFFFA', winType=wintype, units = 'norm')
-#win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Dan Mac', color = '#FFFFFA', winType=wintype, units = 'cm')
-#win=visual.Window([1920, 1080],fullscr=True, allowGUI=False, monitor='MLMmonitor', color = '#FFFFFA', units='pix') 
+win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = monitorName, color = '#FFFFFA', winType=wintype, units = 'norm')
 
 # Buttons
 key_1 = 'c'
@@ -54,14 +56,13 @@ pause_key = 'p' # Advance screen following EEG net placement and QC
 quit_key = 'q'
 
 # Recurring stimuli
-word = visual.TextStim(win, text='XXX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#1B1C96')
-task = visual.TextStim(win, text = 'XX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#1bce92')
-choice = visual.TextStim(win, text = '_______', font='Arial', height = 0.15, pos = (0,-.29), wrapWidth = 50, color = '#ff6542', bold=True)
-instruct = visual.TextStim(win, text = 'XX', height = 0.10, wrapWidth = None, pos = (0,0), color = '#1B1C96')
-fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,.15), color = '#1B1C96')
+fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0.0,0.15), color = '#1B1C96')
 instruct = visual.TextStim(win, text = 'XXXX', height = 0.10, wrapWidth = None, pos = (0,0), color = '#1B1C96')
-options = visual.TextStim(win, text = 'XXXX', font='Arial', height = 0.15, pos = (0,-.27), wrapWidth = 50, color = '#ff6542', bold=True)
-no_resp = visual.TextStim(win, text='NO RESPONSE', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = 'black')
+task = visual.TextStim(win, text = 'XX', font='Arial', height = 0.20, pos = (0.0,0.3), wrapWidth = 50, color = '#129066') # just a darker shade of #1bce92
+word = visual.TextStim(win, text='XXX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#1B1C96')
+choice = visual.TextStim(win, text = '_______', font='Arial', height = 0.15, pos = (0.0,-0.29), wrapWidth = 50, color = '#ff6542', bold=True)
+options = visual.TextStim(win, text = 'XXXX', font='Arial', height = 0.15, pos = (0.0,-0.27), wrapWidth = 50, color = '#ff6542', bold=True)
+no_resp = visual.TextStim(win, text='NO RESPONSE!', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = 'black')
 begin_typing = visual.TextStim(win, text='Begin Typing', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#1B1C96')
 
 key_sound = sound.SoundPygame('resp.wav')
@@ -69,35 +70,29 @@ stim_sound = sound.SoundPygame('stim.wav')
 
 # Create and save the encoding lists
 df = pd.read_csv(path2words + 'balanced_words.csv')
-df = df[['Word', 'val']]
+df = df[['Word','val']]
+df.rename(columns={'Word':'word', 'val':'valence'}, inplace=True)
 
-df_neg = df[df.val == 0] # getting the negative words that will be shown this session
+df_neg = df[df.valence == 0] # getting the negative words that will be shown this session
 df_neg_encode = df_neg.iloc[np.random.permutation(len(df_neg))] 
 df_neg_encode = df_neg_encode.head(50) # shuffle the negatives, then get the first 50
 
-df_pos = df[df.val == 1] # getting the positive words that will be shown this session
+df_pos = df[df.valence == 1] # getting the positive words that will be shown this session
 df_pos_encode = df_pos.iloc[np.random.permutation(len(df_pos))]
 df_pos_encode = df_pos_encode.head(50) # shuffle the positives, then get the first 50 
 
 df_encoded = df_neg_encode.append(df_pos_encode)
 df_encoded = df_encoded.reset_index(drop = True)
-df_encoded['Question'] = 'Describes you?'
-df_encoded.ix[0:24, 'Question'] = 'Emotion'
-df_encoded.ix[50:74, 'Question'] = 'Emotion' # add the questions so that there is a 50/50 ratio for neg and pos words
+df_encoded['question'] = 'Describes?' # Let's keep both tasks to a single word, same reading burden and limits eye movements.
+df_encoded.ix[0:24, 'question'] = 'Emotion?'
+df_encoded.ix[50:74, 'question'] = 'Emotion?' # add the questions so that there is a 50/50 ratio for neg and pos words
 
-df_encoded.to_csv(path2data + 'Encoded_words/encoded_words_' + subject + '.csv') # saving the words and questions
+df_encoded.to_csv(path2data + 'Encoded_words/encoded_words_' + subject + '.csv', index=False) # saving the words and questions
 enc_lists = df_encoded.T.to_dict().values() # turn them into lists of dicts
 random.shuffle(enc_lists) # shuffles the list of dicts
-random.shuffle(enc_lists) # extra shuffled
 
-recall_file = expInfo['SubjectID'] + '_' + expInfo['Date']
-recall_file = open(path2data + recall_file+'_Recall' +'.csv', 'w')
-recall_file.write('')
-
-#print (enc_lists)
-# Refresh rate
-refresh = 16.7
-fps = int(np.ceil(1000/refresh)) # fps = flips per second; done this way in case refresh rate changes
+# Flips per second; will be updated in case of refresh rate changes
+fps = int(np.ceil(1000/refresh))
 half_sec = int(0.5*fps)
 
 # Clocks
@@ -105,45 +100,40 @@ RT = core.Clock()
 
 #Functions
 def show_instruct(instruct_list, adv_key=key_1, quit=quit_key):
-    '''Print instructions onscreen and wait for key press'''
-
-    event.clearEvents()
-    allKeys = []
-    advance = 'false'
+    '''Print instructions and wait for key press'''
 
     for instructions in instruct_list:
+        event.clearEvents()
+        allKeys = []
         advance = 'false'
         instruct.setText(text=instructions)
+
         while advance == 'false':
             instruct.draw()
             win.flip()
             allKeys = event.getKeys(keyList=[adv_key,quit])
 
             if allKeys:
-                    resp = allKeys[0][0]
-        
-                    if resp == adv_key:
-                        advance = 'true'
-        
-                    elif resp == quit_key:
-                        core.quit()
+                resp = allKeys[0][0]
+                if resp == adv_key:
+                    advance = 'true'
+                elif resp == quit_key:
+                    core.quit()
 
 def show_enc_item(in_dict):
     '''Display encoding item and encoding task for 3 seconds'''
-    Question = in_dict['Question']
-    curr_item = in_dict['Word']
-    task.setText(text=Question)
-
-    task.setPos(newPos=(0,.3))
-    task.setPos(newPos=(0,.3))
+    question = in_dict['question']
+    curr_item = in_dict['word']
+    task.setText(text=question)
     word.setText(text=curr_item)
     word.setPos(newPos=(0,0))
-    if Question == 'Describes you?':
-        curr_task = 'Describes_you'
-        options.setText('Yes             No')
-    elif Question == 'Emotion':
+
+    if question == 'Describes?':
+        curr_task = 'Describes'
+        options.setText('Yes     No')
+    elif question == 'Emotion?':
         curr_task = 'Emotion'
-        options.setText('Positive             Negative')
+        options.setText('Positive     Negative')
     stim_sound.play()
     for frame in range(6*half_sec):
         word.draw()
@@ -156,17 +146,13 @@ def show_enc_item(in_dict):
 def show_task(in_dict):
     '''Present encoding task for 1000 ms'''
 
-    Question = in_dict['Question']
-    task.setText(text=Question)
-    task.setColor(color = '#1bce92')
+    question = in_dict['question']
+    task.setText(text=question)
 
-    task.setPos(newPos=(0,.3))
-    task.setPos(newPos=(0,.3))
-
-    if Question == 'Describes you?':
-        curr_task = 'Describes_you'
+    if question == 'Describes?':
+        curr_task = 'Describes'
         options.setText('Yes             No')
-    elif Question == 'Emotion':
+    elif question == 'Emotion?':
         curr_task = 'Emotion'
         options.setText('Positive             Negative')
 
@@ -177,17 +163,14 @@ def show_task(in_dict):
 
     return curr_task
 
-    
-
 def show_enc_full(in_dict):
     '''Display encoding item, encoding task, and options for 10 seconds or until response'''
-    task.setText(text = 'RESPOND')
-    task.setColor(color = 'black')
+
     response = 'no_response'
     curr_RT = 999.0
-    Question = in_dict['Question']
-    curr_item = in_dict['Word']
-    curr_type = in_dict['val']
+    question = in_dict['question']
+    curr_item = in_dict['word']
+    curr_type = in_dict['valence']
     word.setText(text=curr_item)
     choice.setColor('#ff6542')
     advance = 'false'
@@ -215,12 +198,12 @@ def show_enc_full(in_dict):
                 advance = 'true'
                 key_sound.play()
                 frame = 0
-                if Question == 'Emotion':
+                if question == 'Emotion?':
                     response = 'positive'
                     choice.setText('_______')
                     choice.setPos(newPos=(-0.34, -0.27))
                     advance = 'true'
-                if Question == 'Describes you?':
+                if question == 'Describes?':
                     response = 'yes'
                     choice.setText('___')
                     choice.setPos(newPos=(-0.21, -0.27))
@@ -238,11 +221,11 @@ def show_enc_full(in_dict):
                 advance = 'true'
                 key_sound.play()
                 frame = 0
-                if Question == 'Emotion':
+                if question == 'Emotion?':
                     response = 'negative'
                     choice.setText('________')
                     choice.setPos(newPos=(.31, -.27))
-                if Question == 'Describes you?':
+                if question == 'Describes?':
                     response = 'no'
                     choice.setText('___')
                     choice.setPos(newPos=(.24, -.27))
@@ -337,7 +320,6 @@ def free_recall():
     recall_file.write(file_text.text)
 
 # Instructions
-# Instructions
 enc_instructions = ['Welcome!\n\nIn this task, words will appear on the screen in front of you. \
 \n\nAfter each word is presented, you will be asked one of two questions about \nthe word, and you will respond by pressing a button.\
 \n\nPress button 1 to advance.',  
@@ -364,10 +346,10 @@ Press 1 to begin.']
 end_instructions = ['Great job! You are finished with this task.\n\nThe experimenter will be in shortly']
 
 # Practice Stimuli
-pract1 = {'Word': 'faker', 'val' : '1', 'Question': 'Emotion'}
-pract2 = {'Word': 'generous', 'val' : '1', 'Question': 'Describes you?'}
-pract3 = {'Word': 'loner', 'val' : '1', 'Question': 'Describes you?'}
-pract4 = {'Word': 'thoughtful', 'val' : '1', 'Question': 'Emotion'}
+pract1 = {'word': 'faker', 'valence' : '1', 'question': 'Emotion?'}
+pract2 = {'word': 'generous', 'valence' : '1', 'question': 'Describes?'}
+pract3 = {'word': 'loner', 'valence' : '1', 'question': 'Describes?'}
+pract4 = {'word': 'thoughtful', 'valence' : '1', 'question': 'Emotion?'}
 pract_trials = [pract1, pract2, pract3, pract4]
 
 # Begin practice trials
@@ -388,8 +370,14 @@ show_instruct(final_enc_instructions)
 enc_file = expInfo['SubjectID'] + '_' + expInfo['Date']
 enc_file = open(path2data + enc_file+'_StressMem_enc' +'.csv', 'w')
 enc_file.write('subject,trial,block,word,val,task,response,RT,iti_dur(ms)\n')
-trial = 1
 
+# Start with 5 seconds of fixation to let the person settle in
+for frame in range(10*half_sec):
+    fix.draw()
+    win.flip()
+
+# Run the trials
+trial = 1
 for dict in enc_lists:
     block = 1
     curr_task = show_task(dict)
@@ -424,6 +412,14 @@ for dict in enc_lists: #repeat the procedure
     trial = trial + 1
 enc_file.close()
 
+# FREE RECALL
+
+# Set up a file to hold the free recall data.
+recall_file = expInfo['SubjectID'] + '_' + expInfo['Date']
+recall_file = open(path2data + recall_file+'_Recall' +'.csv', 'w')
+recall_file.write('')
+
+# Run the recall phase . . . 
 show_instruct(recall_instructions)
 free_recall()
 recall_file.close()
