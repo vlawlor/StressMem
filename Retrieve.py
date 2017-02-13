@@ -44,6 +44,7 @@ if  session != 1 and session != 2: # needs a 1 or 2 for session to show the corr
         core.quit()
 
 # WORDS
+pos_num = 0
 if session == 1:
     # making the word lists
     df_new = pd.read_csv(path2words + 'balanced_words_option8_WORKING.csv')
@@ -67,20 +68,36 @@ if session == 1:
     df_new_neg = df_new_neg.iloc[np.random.permutation(len(df_new_neg))]
 
     # handling the positive lists
-    df_encoded_pos = df_encoded_pos.iloc[np.random.permutation(len(df_encoded_pos))]
-    df_encoded_pos = df_encoded_pos.reset_index(drop = True)
     df_encoded_pos = df_encoded_pos[['word', 'val', 'task']]
     df_encoded_pos['status'] = 'old'
+    balanced = 'false'
+    while balanced == 'false':
+        df_encoded_pos = df_encoded_pos.iloc[np.random.permutation(len(df_encoded_pos))]
+        if df_encoded_pos.head(25)['task'].value_counts()[1] == 13:
+            balanced = 'true'
+            pos_num = 13
+            df_encoded_pos = df_encoded_pos.reset_index(drop = True)
+        elif df_encoded_pos.head(25)['task'].value_counts()[1] == 12:
+            balanced = 'true'
+            pos_num = 12
+            df_encoded_pos = df_encoded_pos.reset_index(drop = True)
     df_new_pos_1 = df_new_pos.head(25)
     df_new_pos_2 = df_new_pos.tail(25)
     df_encoded_pos_1 = df_encoded_pos.head(25)
     df_encoded_pos_2 = df_encoded_pos.tail(25)
 
     # handling the negative lists
-    df_encoded_neg = df_encoded_neg.iloc[np.random.permutation(len(df_encoded_neg))]
-    df_encoded_neg = df_encoded_neg.reset_index(drop = True)
     df_encoded_neg = df_encoded_neg[['word', 'val', 'task']]
     df_encoded_neg['status'] = 'old'
+    balanced = 'false'
+    while balanced == 'false':
+        df_encoded_neg = df_encoded_neg.iloc[np.random.permutation(len(df_encoded_neg))]
+        if df_encoded_neg.head(25)['task'].value_counts()[1] == 13 and pos_num == 12: 
+            balanced = 'true'
+            df_encoded_neg = df_encoded_neg.reset_index(drop = True)
+        elif df_encoded_neg.head(25)['task'].value_counts()[1] == 12 and pos_num == 13:
+            balanced = 'true'
+            df_encoded_neg = df_encoded_neg.reset_index(drop = True)
     df_new_neg_1 = df_new_neg.head(25)
     df_new_neg_2 = df_new_neg.tail(25)
     df_encoded_neg_1 = df_encoded_neg.head(25)
@@ -396,28 +413,29 @@ def show_ret_task(r_dict):
 
 trial = 1
 
+end_instruct = ['Great job! You have finished this portion of the task.\n\nPlease wait for the experimenter.']
+
 if session == 1:
     # Instructions
     r_instructions = ['Welcome! Today we will be testing your memory. \n\nPress 1 to advance.',
-    'We will show you all of the words \nyou saw yesterday. \n\nSince you have seen them before, \nthey are considered "OLD".\n\nPress 1 to advance.',
+    'We will show you all of the words \nyou saw yesterday. \n\nSince you have seen them before, \nthey are considered "OLD."\n\nPress 1 to advance.',
     'We will mix them up with words \nyou have not seen before. \n\nSince you have not seen them before,\nthey are considered "NEW".\n\nPress 1 to advance.',
     'When you see the "Old or New" prompt, try\nto remember:\n\nDid you see the word yesterday?\n\nPress 1 to advance.',
     'The prompts will appear above a cross,\nand the words will appear below the cross.\n\nTry to keep your eyes on the cross, to\nlimit extra eye movement.'
     '\n\nPress 1 to advance.',
-    'After 3.5 seconds, another screen \nwill come up that says "RESPOND". \n\nThis is where you will choose \n"OLD" or "NEW". \n\nPress 1 to advance.',
-    'If you select "OLD", a new screen will come up \
+    'After 3.5 seconds, another screen \nwill come up that says "RESPOND." \n\nThis is where you will choose \n"OLD" or "NEW." \n\nPress 1 to advance.',
+    'If you select "OLD," a new screen will come up \
     \nwith the prompt "QUESTION" above a cross,\
     \nand the word shown again below the cross.\
     \n\nWhen you see this prompt, try to remember: \
     \n\nWhich question was asked about this word yesterday? \
     \n\nPress 1 to advance.',
-    'After 3.5 seconds, another screen \nwill come up that says "RESPOND". \n\nThis is where you will choose \nwhich question you answered\nfor that word yesterday:\n\n"Emotion?" or "Describes you?" \
+    'After 3.5 seconds, another screen \nwill come up that says "RESPOND." \n\nThis is where you will choose \nwhich question you answered\nfor that word yesterday:\n\n"Emotion?" or "Describes you?" \
     \n\nPress 1 to advance.',
     'Does this make sense to you?\n\nIf you have any questions, please ask now.\n\nOtherwise, press 1 to advance.',
     'Please try your best.\n\nWe will record your brain activity\nas you try to remember.\n\nThe ideal time to blink is when\nyou are responding.\
     \n\nPress 1 to advance.',
     'Any questions? If so, please ask now.\n\nWe are going to do practice trials\nbefore we start the experiment.\n\nWhen you are ready, press 1 to start.']
-    
     show_instruct(r_instructions)
     
     # Practice trials
@@ -489,6 +507,7 @@ else:
         ret_file.write('%s,%i,%i,%s,%s,%s,%i,%.3f,%s,%s,%.3f,%i\n' %(subject,session,trial,item,val,status,recog_resp,recog_rt,task,task_resp,task_rt,iti_durs))
         trial = trial + 1
     ret_file.close()
+    show_instruct(end_instruct)
 
 trial = 1
 
@@ -517,4 +536,5 @@ if session == 1:
 
         ret_file.write('%s,%i,%i,%s,%s,%s,%i,%.3f,%s,%s,%.3f,%i\n' %(subject,session,trial,item,val,status,recog_resp,recog_rt,task,task_resp,task_rt,iti_durs))
         trial = trial + 1
-ret_file.close()
+    ret_file.close()
+    show_instruct(end_instruct)
