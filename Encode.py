@@ -43,9 +43,9 @@ if os.path.isfile(path2data + 'Encoded_words/encoded_words_' + subject + '.csv')
 # Window
 # Switch to full, no GUI, and EEG_booth
 wintype='pyglet' 
-win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Elyssa Mac', color = 'Ivory', winType=wintype, units = 'norm')
-#win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Dan Mac', color = 'Ivory', winType=wintype, units = 'cm')
-#win=visual.Window([1920, 1080],fullscr=True, allowGUI=False, monitor='MLMmonitor', units='pix') 
+win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Elyssa Mac', color = '#FFFFFA', winType=wintype, units = 'norm')
+#win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = 'Dan Mac', color = '#FFFFFA', winType=wintype, units = 'cm')
+#win=visual.Window([1920, 1080],fullscr=True, allowGUI=False, monitor='MLMmonitor', color = '#FFFFFA', units='pix') 
 
 # Buttons
 key_1 = 'c'
@@ -55,20 +55,20 @@ quit_key = 'q'
 
 # Recurring stimuli
 word = visual.TextStim(win, text='XXX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#1B1C96')
-task = visual.TextStim(win, text = 'XX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#11A08E')
-choice = visual.TextStim(win, text = '_______', font='Arial', height = 0.15, pos = (0,-.29), wrapWidth = 50, color = '#ff7a5b', bold=True)
+task = visual.TextStim(win, text = 'XX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#1bce92')
+choice = visual.TextStim(win, text = '_______', font='Arial', height = 0.15, pos = (0,-.29), wrapWidth = 50, color = '#ff6542', bold=True)
 instruct = visual.TextStim(win, text = 'XX', height = 0.10, wrapWidth = None, pos = (0,0), color = '#1B1C96')
-fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,0), color = '#1B1C96')
+fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,.15), color = '#1B1C96')
 instruct = visual.TextStim(win, text = 'XXXX', height = 0.10, wrapWidth = None, pos = (0,0), color = '#1B1C96')
-options = visual.TextStim(win, text = 'XXXX', font='Arial', height = 0.15, pos = (0,-.27), wrapWidth = 50, color = '#ff7a5b', bold=True)
+options = visual.TextStim(win, text = 'XXXX', font='Arial', height = 0.15, pos = (0,-.27), wrapWidth = 50, color = '#ff6542', bold=True)
 no_resp = visual.TextStim(win, text='NO RESPONSE', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = 'black')
-begin_typing = visual.TextStim(win, text='Begin Typing', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = 'black')
+begin_typing = visual.TextStim(win, text='Begin Typing', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#1B1C96')
 
-#key_sound = sound.SoundPygame('stim.wav')
-#stim_sound = sound.SoundPygame('resp.wav')
+key_sound = sound.SoundPygame('resp.wav')
+stim_sound = sound.SoundPygame('stim.wav')
 
 # Create and save the encoding lists
-df = pd.read_csv(path2words + 'balanced_words_option8_WORKING.csv')
+df = pd.read_csv(path2words + 'balanced_words.csv')
 df = df[['Word', 'val']]
 
 df_neg = df[df.val == 0] # getting the negative words that will be shown this session
@@ -128,10 +128,180 @@ def show_instruct(instruct_list, adv_key=key_1, quit=quit_key):
                     elif resp == quit_key:
                         core.quit()
 
+def show_enc_item(in_dict):
+    '''Display encoding item and encoding task for 3 seconds'''
+    Question = in_dict['Question']
+    curr_item = in_dict['Word']
+    task.setText(text=Question)
+
+    task.setPos(newPos=(0,.3))
+    task.setPos(newPos=(0,.3))
+    word.setText(text=curr_item)
+    word.setPos(newPos=(0,0))
+    if Question == 'Describes you?':
+        curr_task = 'Describes_you'
+        options.setText('Yes             No')
+    elif Question == 'Emotion':
+        curr_task = 'Emotion'
+        options.setText('Positive             Negative')
+    stim_sound.play()
+    for frame in range(6*half_sec):
+        word.draw()
+        task.draw()
+        fix.draw()
+        win.flip()
+
+    return curr_item
+
+def show_task(in_dict):
+    '''Present encoding task for 1000 ms'''
+
+    Question = in_dict['Question']
+    task.setText(text=Question)
+    task.setColor(color = '#1bce92')
+
+    task.setPos(newPos=(0,.3))
+    task.setPos(newPos=(0,.3))
+
+    if Question == 'Describes you?':
+        curr_task = 'Describes_you'
+        options.setText('Yes             No')
+    elif Question == 'Emotion':
+        curr_task = 'Emotion'
+        options.setText('Positive             Negative')
+
+    for frame in range(1*fps):
+        task.draw()
+        fix.draw()
+        win.flip()
+
+    return curr_task
+
+    
+
+def show_enc_full(in_dict):
+    '''Display encoding item, encoding task, and options for 10 seconds or until response'''
+    task.setText(text = 'RESPOND')
+    task.setColor(color = 'black')
+    response = 'no_response'
+    curr_RT = 999.0
+    Question = in_dict['Question']
+    curr_item = in_dict['Word']
+    curr_type = in_dict['val']
+    word.setText(text=curr_item)
+    choice.setColor('#ff6542')
+    advance = 'false'
+    
+    word.setPos(newPos=(0,0))
+    
+    event.clearEvents()
+    RT.reset()
+    allKeys = []
+    frame = 0
+    
+    while frame < (10*fps) and advance == 'false':
+        allKeys = event.getKeys(keyList=[key_1, key_5, quit_key],timeStamped=RT)
+        task.draw()
+        word.draw()
+        fix.draw()
+        options.draw()
+        win.flip()
+        
+        if allKeys:
+            enc_resp = allKeys[0][0]
+            curr_RT = allKeys[0][1]
+
+            if enc_resp == key_1:
+                advance = 'true'
+                key_sound.play()
+                frame = 0
+                if Question == 'Emotion':
+                    response = 'positive'
+                    choice.setText('_______')
+                    choice.setPos(newPos=(-0.34, -0.27))
+                    advance = 'true'
+                if Question == 'Describes you?':
+                    response = 'yes'
+                    choice.setText('___')
+                    choice.setPos(newPos=(-0.21, -0.27))
+                    advance = 'true'
+                while frame < (4*half_sec):
+                    task.draw()
+                    word.draw()
+                    fix.draw()
+                    options.draw()
+                    choice.draw()
+                    win.flip()
+                    frame = frame + 1
+                    
+            elif enc_resp == key_5:
+                advance = 'true'
+                key_sound.play()
+                frame = 0
+                if Question == 'Emotion':
+                    response = 'negative'
+                    choice.setText('________')
+                    choice.setPos(newPos=(.31, -.27))
+                if Question == 'Describes you?':
+                    response = 'no'
+                    choice.setText('___')
+                    choice.setPos(newPos=(.24, -.27))
+                while frame < (4*half_sec):
+                    task.draw()
+                    word.draw()
+                    fix.draw()
+                    options.draw()
+                    choice.draw()
+                    win.flip()
+                    frame = frame + 1
+
+            elif enc_resp == quit_key:
+                core.quit()
+
+        frame = frame + 1
+    return (curr_type, response, curr_RT)
+
+def show_ITI():
+    '''Display fixation ITI for 500, 1000, or 2000 ms, with 500 ms over-represented'''
+
+    iti_durs = [half_sec, half_sec, fps, 2*fps]
+    duration = random.choice(iti_durs)
+
+    for frames in range(duration):
+        fix.draw()
+        win.flip()
+
+    return duration*refresh
+
+def show_break():
+    '''Display break text for 30 seconds'''
+    event.clearEvents()
+    allKeys = []
+    advance = 'false'
+
+    duration = 30*fps
+
+    for frames in range(duration):
+        instruct.setText(break_instructions)
+        instruct.draw()
+        win.flip()
+        if allKeys:
+            resp = allKeys[0][0]
+            if resp == quit_key:
+                   core.quit()
+
+    return duration*refresh
+
+def show_no_resp():
+    '''Show the text "no response"'''
+    for frames in range(2*fps):
+        no_resp.draw()
+        win.flip()
+
 def free_recall():
     chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-    text = visual.TextStim(win, height=(.10), wrapWidth=(.9),color='Black',text='')
-    file_text = visual.TextStim(win, height=(.10), wrapWidth=(.9),color='Black',text='')
+    text = visual.TextStim(win, height=(.10), wrapWidth=(.9),color='#1B1C96',text='')
+    file_text = visual.TextStim(win, height=(.10), wrapWidth=(.9),color='#1B1C96',text='')
 
 #   Loop until return is pressed
     endTrial = False
@@ -166,174 +336,12 @@ def free_recall():
         win.flip()
     recall_file.write(file_text.text)
 
-def show_enc_item(in_dict):
-    '''Display encoding item and encoding task for 1 second'''
-    Question = in_dict['Question']
-    curr_item = in_dict['Word']
-    task.setText(text=Question)
-
-    task.setPos(newPos=(0,.3))
-    task.setPos(newPos=(0,.3))
-    word.setText(text=curr_item)
-    word.setPos(newPos=(0,0))
-    if Question == 'Describes you?':
-        curr_task = 'Describes_you'
-        options.setText('Yes (1)     No (5)')
-    elif Question == 'Emotion':
-        curr_task = 'Emotion'
-        options.setText('Positive (1)     Negative (5)')
-
-    for frame in range(2*fps):
-        word.draw()
-        task.draw()
-        win.flip()
-
-    return curr_item
-
-def show_no_resp():
-    '''Show the text "no response"'''
-    for frames in range(2*fps):
-        no_resp.draw()
-        win.flip()
-
-def show_enc_full(in_dict):
-    '''Display encoding item, encoding task, and options for 10 seconds or until response'''
-    response = 'no_response'
-    curr_RT = 999.0
-    Question = in_dict['Question']
-    curr_item = in_dict['Word']
-    curr_type = in_dict['val']
-    word.setText(text=curr_item)
-    choice.setColor('#ff7a5b')
-    advance = 'false'
-    
-    word.setPos(newPos=(0,0))
-    
-    event.clearEvents()
-    RT.reset()
-    allKeys = []
-    frame = 0
-    #stim_sound.play()
-    
-    while frame < (10*fps) and advance == 'false':
-        allKeys = event.getKeys(keyList=[key_1, key_5, quit_key],timeStamped=RT)
-        task.draw()
-        word.draw()
-        options.draw()
-        win.flip()
-        
-        if allKeys:
-            enc_resp = allKeys[0][0]
-            curr_RT = allKeys[0][1]
-
-            if enc_resp == key_1:
-                advance = 'true'
-                #key_sound.play()
-                frame = 0
-                if Question == 'Emotion':
-                    response = 'positive'
-                    choice.setText('__________')
-                    choice.setPos(newPos=(-0.30, -0.27))
-                    #advance = 'true'
-                if Question == 'Describes you?':
-                    response = 'yes'
-                    choice.setText('______')
-                    choice.setPos(newPos=(-0.18, -0.27))
-                    #advance = 'true'
-                while frame < (3*half_sec):
-                    task.draw()
-                    word.draw()
-                    options.draw()
-                    choice.draw()
-                    win.flip()
-                    frame = frame + 1
-                    
-            elif enc_resp == key_5:
-                advance = 'true'
-                #key_sound.play()
-                frame = 0
-                if Question == 'Emotion':
-                    response = 'negative'
-                    choice.setText('__________')
-                    choice.setPos(newPos=(.28, -.27))
-                if Question == 'Describes you?':
-                    response = 'no'
-                    choice.setText('_____')
-                    choice.setPos(newPos=(.20, -.27))
-                while frame < (3*half_sec):
-                    task.draw()
-                    word.draw()
-                    options.draw()
-                    choice.draw()
-                    win.flip()
-                    frame = frame + 1
-            elif enc_resp == quit_key:
-                core.quit()
-            
-        frame = frame + 1
-    return (curr_type, response, curr_RT)
-
-
-def show_task(in_dict):
-    '''Present arrow and encoding task for 500 ms'''
-
-    Question = in_dict['Question']
-    task.setText(text=Question)
-
-    task.setPos(newPos=(0,.3))
-    task.setPos(newPos=(0,.3))
-
-    if Question == 'Describes you?':
-        curr_task = 'Describes_you'
-        options.setText('Yes (1)     No (5)')
-    elif Question == 'Emotion':
-        curr_task = 'Emotion'
-        options.setText('Positive (1)     Negative (5)')
-
-    for frame in range(half_sec):
-        task.draw()
-        win.flip()
-
-    return curr_task
-
-
-def show_ITI():
-    '''Display fixation ITI for 500, 1000, or 2000 ms, with 500 ms over-represented'''
-
-    iti_durs = [half_sec, half_sec, fps, 2*fps]
-    duration = random.choice(iti_durs)
-
-    for frames in range(duration):
-        fix.draw()
-        win.flip()
-
-    return duration*refresh
-
-def show_break():
-    '''Display break text for 30 seconds'''
-    event.clearEvents()
-    allKeys = []
-    advance = 'false'
-
-    duration = 30*fps
-
-    for frames in range(duration):
-        instruct.setText(break_instructions)
-        instruct.draw()
-        win.flip()
-        if allKeys:
-            resp = allKeys[0][0]
-            if resp == quit_key:
-                   core.quit()
-
-    return duration*refresh
-
-
+# Instructions
 # Instructions
 enc_instructions = ['Welcome!\n\nIn this task, words will appear on the screen in front of you. \
-\n\nAfter each word is presented, you will be asked one of two questions about the word,\nand you will respond by pressing a button.\
+\n\nAfter each word is presented, you will be asked one of two questions about \nthe word, and you will respond by pressing a button.\
 \n\nPress button 1 to advance.',  
-'If you are asked about emotion, select whether you think the word is positive or negative. \
+'If you are asked about emotion, select whether you think the word is more positive or negative. \
 \n\nPress button 1 to advance.',
 'If you are asked if a word describes you, answer yes or no based on whether or not you think the word describes \
 or relates to you. \
@@ -343,8 +351,7 @@ or relates to you. \
 final_enc_instructions = ['Do you have any final questions?\n\nIf not, press 1 to begin the task']
 
 break_instructions = 'Good job! You are halfway through this task. \
-\n\nThis screen will advance after a short break, and then you will be able \
-to advance to the second half of the task when you are ready.'
+\n\nThis screen will advance after a short break, and then you will be able to advance to the second half of the task when you are ready.'
 
 break_instructions_2 = ['Press 1 to begin the second half of the task']
 
