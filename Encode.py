@@ -72,11 +72,14 @@ no_resp_sound = sound.SoundPygame('C')
 # CREATE THE ENCODING LIST. No need to save separately here because all the same information will be saved in the encoding logfile
 
 d = {} # Create a dictionary and read in all the information about each word. Will save data on valence, arousal, frequency, etc for possible use as covariates in analysis.
+keys = [x for x in range(200)] # Need to generate a randomized list of keys for this dict to avoid same seq of words.
+random.shuffle(keys)
 with open(path2words + 'balanced_words.csv', mode='r') as infile:
     next(infile) # skip the header
     reader = csv.reader(infile)
     for i, rows in enumerate(reader):
-        d[i] = {'word':rows[0], 'mean_valence':rows[1], 'mean_arousal':rows[2], 'valence':rows[3], 'letters':rows[4], 'frequency':rows[5], 'concreteness':rows[6], 'part_of_speech':rows[7], 'imageability':rows[8]}
+        k = keys.pop()
+        d[k] = {'word':rows[0], 'mean_valence':rows[1], 'mean_arousal':rows[2], 'valence':rows[3], 'letters':rows[4], 'frequency':rows[5], 'concreteness':rows[6], 'part_of_speech':rows[7], 'imageability':rows[8]}
 
 # Now split that into positive and negative dictionaries.
 pos_ct = 0
@@ -91,7 +94,7 @@ for k in range(len(d)):
         neg_d[neg_ct] = d[k]
         neg_ct = neg_ct + 1
 
-# Now select 50 words, at random, from each list for use at encoding.
+# Now select 50 words from each list for use at encoding.
 # Assign half the words in each list to one of two tasks--either "Describes?" (you) or "Positive?".
 enc_list = []
 for i in range(50):
