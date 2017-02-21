@@ -5,7 +5,7 @@
 # User, you may need/want to edit the next several lines
 import csv, getpass, os, random, sys, glob
 userName = getpass.getuser()
-monitorName = 'MLM Mac'
+monitorName = 'Elyssa Mac'
 
 path2words = '/Users/' + userName + '/Work/Expts/StressMem/PsychoPy/Stimuli/'
 path2data = '/Users/' + userName + '/Work/Expts/StressMem/Data/'
@@ -195,8 +195,8 @@ old_new_prompt = visual.TextStim(win, text='Old or New?', font='Arial', height =
 task_prompt = visual.TextStim(win, text='Question?', font='Arial', height = 0.20, pos = (0,0.3), wrapWidth = 50, color = '#e569CE')
 scale = visual.TextStim(win, text='  1           2           3           4           5           6  ', height = 0.10, pos = (0,-0.25), wrapWidth = 50, color = '#1B1C96')
 scale_labels = visual.TextStim(win, text='Sure  Probably  Maybe  Maybe  Probably  Sure', height = 0.10, pos = (0,-0.4), wrapWidth = 50, color = '#1B1C96')
-old_new_scale = visual.TextStim(win, text='Old                             New', height = 0.17, pos = (0,-0.62), wrapWidth = 50, color = '#ff7a5b')
-task_scale = visual.TextStim(win, text='Describes                            Positive', height = 0.17, pos = (0,-0.62), wrapWidth = 50, color = '#1B1C96')
+old_new_scale = visual.TextStim(win, text='Old                 New', height = 0.17, pos = (0,-0.62), wrapWidth = 50, color = '#ff7a5b')
+task_scale = visual.TextStim(win, text='Describes          Positive', height = 0.17, pos = (0,-0.62), wrapWidth = 50, color = '#e569CE')
 
 key_sound = sound.SoundPygame('resp.wav')
 stim_sound = sound.SoundPygame('stim.wav')
@@ -450,19 +450,18 @@ r_instructions = ['Welcome! Today we will be testing your memory. \n\nPress 1 to
 'When you see the "Old or New" prompt, try\nto remember:\n\nDid you see the word yesterday?\n\nPress 1 to advance.',
 'The prompts will appear above a cross,\nand the words will appear below the cross.\n\nTry to keep your eyes on the cross, to\nlimit extra eye movement.'
 '\n\nPress 1 to advance.',
-'After 3.5 seconds, another screen \nwith a scale will come up." \n\nThis is where you will choose \n"OLD" or "NEW." \n\nPress 1 to advance.',
-'If you select "OLD," a new screen will come up \
-\nwith the prompt "QUESTION" above a cross,\nand the word shown again below the cross.\
-\n\nWhen you see this prompt, try to remember: \n\nWhich question was asked about this word yesterday?\n\nPress 1 to advance.',
-'After 3.5 seconds, another screen \nanother scale will come up." \n\nThis is where you will choose \nwhich question you answered\nfor that word yesterday:\n\n"Emotion?" or "Describes you?" \
+'After 3.5 seconds, a scale will appear \nat the bottom of the screen. \n\nThis is where you will choose \n"OLD" or "NEW." \n\nPress 1 to advance.',
+'If you select "OLD," a new screen will \ncome up with the prompt "QUESTION" \nabove a cross, and the word shown again \nbelow the cross.\
+\n\nWhen you see this prompt, try to remember: \n\nWhich question was asked about \nthis word yesterday?\n\nPress 1 to advance.',
+'After 3.5 seconds, a scale will appear at the \nbottom of the screen. \n\nThis is where you will choose which question \nyou answered for that word yesterday:\n\n"Emotion?" or "Describes you?" \
 \n\nPress 1 to advance.',
 'Does this make sense to you?\n\nIf you have any questions, please ask now.\n\nOtherwise, press 1 to advance.',
 'Please try your best.\n\nWe will record your brain activity\nas you try to remember.\n\nThe ideal time to blink is when\nyou are responding.\
 \n\nPress 1 to advance.',
-'Any questions? If so, please ask now.\n\nWe are going to do practice trials\nbefore we start the experiment.\n\nWhen you are ready, press 1 to start.']
+'Any questions? If so, please ask now.\n\nWe are going to do some practice trials\nbefore we start the experiment.\n\nWhen you are ready, press 1 to start.']
 
-post_prac_instructions = ['You have finished the practice trials.\n\nDo you have any questions?\nIf so, please ask now.\n\nWhen you are ready,\npress 1 to advance.',
-'We are ready to begin the 1st block.\n\nIt will be identical to the practice study,\nbut you will see 50 words rather than 4.\n\nWhen you are ready to begin, press 1.']
+post_prac_instructions = ['You have finished the practice trials.\n\nDo you have any questions? If so, \nplease ask now.\n\nWhen you are ready,press 1 to advance.',
+'We are ready to begin the 1st block.\n\nIt will be identical to the practice trials,\nbut you will see 50 words rather than 4.\n\nWhen you are ready to begin, press 1.']
 
 time2_instructions = ['We are ready to begin the second block of trials.\n\nDo you have any questions? If so, please ask now.\n\nWhen you are ready, press 1 to advance.',
 'The second block will be identical to the first block.\n\nWhen you are ready to begin press 1.']
