@@ -499,7 +499,7 @@ if session == 1:
     for frame in range(10*half_sec):
         fix.draw()
         win.flip()
-    ret_file = path2data + subject + '_StressMem_Retrieval_Session1_' + expInfo['Date']
+    ret_file = path2data + subject + '_StressMem_Retrieval_' + expInfo['Date']
     ret_file = open(ret_file + '.csv', 'w')
     ret_file.write('subject,phase,session,trial,item,enc_task,enc_response,enc_RT,valence,letters,frequency,concreteness,part_of_speech,imageability,status,recog_resp,recog_rt,old_new_onset,old_new_duration,ret_stim_onset,ret_stim_duration,ret_options_onset,ret_options_duration,task_resp,task_rt,task_onset,task_duration,task_prompt_onset,task_prompt_duration,task_options_onset,task_options_duration,iti_durs\n') 
     
@@ -580,9 +580,12 @@ else:
         win.flip()
 
     #open output file for writing the retrieval data
-    ret_file = path2data + subject + '_StressMem_Retrieval_Session2_' + expInfo['Date']
-    ret_file = open(ret_file + '.csv', 'w')
-    ret_file.write('subject,phase,session,trial,item,enc_task,enc_response,enc_RT,valence,letters,frequency,concreteness,part_of_speech,imageability,status,recog_resp,recog_rt,old_new_onset,old_new_duration,ret_stim_onset,ret_stim_duration,ret_options_onset,ret_options_duration,task_resp,task_rt,task_onset,task_duration,task_prompt_onset,task_prompt_duration,task_options_onset,task_options_duration,iti_durs\n')
+    #ret_file = path2data + subject + '_StressMem_Retrieval_Session2_' + expInfo['Date']
+    #ret_file = open(ret_file + '.csv', 'w')
+    #ret_file = glob.glob(path2data + subject + '*_StressMem_Retrieval_Session1*.csv')
+    #ret_file = open(ret_file + '.csv', 'w')
+    ret_file = open(glob.glob(path2data + subject + '*_StressMem_Retrieval*.csv')[0], 'a')
+    
     trial = 1
     for r_dict in session_2_lists:
         phase,item, enc_task, enc_response, enc_RT, valence, letters, frequency, concreteness, part_of_speech, imageability, status, recog_resp, recog_rt, old_new_onset, old_new_duration, ret_stim_onset, ret_stim_duration, ret_options_onset, ret_options_duration = show_respond(r_dict)
