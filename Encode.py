@@ -14,6 +14,7 @@ path2data = '/Users/' + userName + '/Work/Expts/StressMem/Data/'
 import numpy as np
 import pandas as pd
 from random import shuffle, randint
+import sys
 from psychopy import prefs
 prefs.general['audioLib'] = ['pygame']
 from psychopy import core, data, event, gui, misc, sound, visual
@@ -72,14 +73,21 @@ no_resp_sound = sound.SoundPygame('C')
 # CREATE THE ENCODING LIST. No need to save separately here because all the same information will be saved in the encoding logfile
 
 d = {} # Create a dictionary and read in all the information about each word. Will save data on valence, arousal, frequency, etc for possible use as covariates in analysis.
-keys = [x for x in range(200)] # Need to generate a randomized list of keys for this dict to avoid same seq of words.
-random.shuffle(keys)
-with open(path2words + 'balanced_words.csv', mode='r') as infile:
-    next(infile) # skip the header
-    reader = csv.reader(infile)
-    for i, rows in enumerate(reader):
-        k = keys.pop()
-        d[k] = {'word':rows[0], 'mean_valence':rows[1], 'mean_arousal':rows[2], 'valence':rows[3], 'letters':rows[4], 'frequency':rows[5], 'concreteness':rows[6], 'part_of_speech':rows[7], 'imageability':rows[8]}
+balanced_words = pd.read_csv(path2words + 'balanced_words.csv')
+balanced_words = balanced_words.reset_index(drop = True)
+d = balanced_words.T.to_dict().values()
+
+#NOTE: the following code was not working with my computer or the lab laptop. I think it's a version thing, but updating didn't help. 
+#keys = [x for x in range(200)] # Need to generate a randomized list of keys for this dict to avoid same seq of words.
+#random.shuffle(keys)
+#with open(path2words + 'balanced_words.csv', mode='r') as infile:
+    #next(infile, None) # skip the headers
+    #reader = csv.reader(infile)
+    #print(sys.version)
+    #for i, rows in enumerate(reader):
+        #k = keys.pop()
+        #d[k] = {'word':rows[0], 'mean_valence':rows[1], 'mean_arousal':rows[2], 'valence':rows[3], 'letters':rows[4], 'frequency':rows[5], 'concreteness':rows[6], 'part_of_speech':rows[7], 'imageability':rows[8]}
+        #print('word')
 
 # Now split that into positive and negative dictionaries.
 pos_ct = 0
@@ -87,13 +95,12 @@ neg_ct = 0
 pos_d = {}
 neg_d = {}
 for k in range(len(d)):
-    if d[k]['valence'] == '1':
+    if d[k]['valence'] == 1:
         pos_d[pos_ct] = d[k]
         pos_ct = pos_ct + 1
     else:
         neg_d[neg_ct] = d[k]
         neg_ct = neg_ct + 1
-
 # Now select 50 words from each list for use at encoding.
 # Assign half the words in each list to one of two tasks--either "Describes?" (you) or "Positive?".
 enc_list = []
@@ -278,7 +285,7 @@ def free_recall():
     text = visual.TextStim(win, height=(.10), wrapWidth=(.9),color='#1B1C96',text='')
     file_text = visual.TextStim(win, height=(.10), wrapWidth=(.9),color='#1B1C96',text='')
 
-#   Loop until return is pressed
+#   Loop until q is pressed
     endTrial = False
     while not endTrial:
     # Wait for response...
@@ -301,7 +308,7 @@ def free_recall():
             elif writing[0] in chars:
                 text.setText(text.text + writing[0])
                 file_text.setText(file_text.text + writing[0])
-        # If escape, abort the experiment
+        # If escape, end the trial
             elif writing[0]=='escape':
                 endTrial = True
         elif text.text == '':
@@ -396,6 +403,7 @@ mean_valence,mean_arousal,valence,letters,frequency,concreteness,part_of_speech,
     if block == 1:
         show_break()
         show_instruct(break_instructions_2)
+        random.shuffle(enc_list)
 
 enc_file.close()
 
