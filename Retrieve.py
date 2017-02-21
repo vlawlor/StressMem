@@ -43,8 +43,8 @@ else:
 subject = expInfo['SubjectID']
 session = expInfo['Session']
 
-if  session != 1 and session != 2: # needs a 1 or 2 for session to show the correct word lists, don't want them to go all the way
-    myDlg = gui.Dlg(title="Invalid session number") # through the practice before we realize
+if  session != 1 and session != 2: # needs a 1 or 2 for session to show the correct word lists, don't want them to go all the way through the practice before we realize
+    myDlg = gui.Dlg(title="Invalid session number") 
     myDlg.addText('Invalid session number. Please enter 1 or 2.')
     ok_data = myDlg.show()
     if myDlg.OK:
@@ -71,14 +71,12 @@ key_6 = 'comma'
 pause_key = 'p' # Advance screen following EEG net placement and QC; we don't use this yet
 quit_key = 'q' 
 
-# WORDS--this section needs some work.. 
+# WORDS
 if session == 1:
-    # read in ALL of the words, and turn into a dict of dicts
+    # read in ALL of the words and the encoded words as dicts
     df_all = pd.read_csv(path2words + 'balanced_words.csv')
     df_all = df_all.reset_index(drop = True)
     all_d = df_all.T.to_dict()
-
-    # read in the encoding data, then turn it into a dict of dicts
     encoded = glob.glob(path2data + subject + '*_StressMem_enc.csv')
     df_encoded = pd.read_csv(encoded[0])
     df_encoded = df_encoded.loc[df_encoded['block'] == 1]
@@ -90,17 +88,14 @@ if session == 1:
     for key, enc_item in encoded_d.iteritems():
         for key, all_item in copy_all_item.iteritems():
             if all_item['word'] == enc_item['word']:
-                print(all_item['word']) #just a check 
                 all_d.pop(key)
-
-    # assigning old/new status
-    for item in all_d.iteritems():
+                
+    for item in all_d.iteritems(): # assigning old/new status
         item[1]['status'] = 'new'
     for item in encoded_d.iteritems():
         item[1]['status'] = 'old'
 
-    # setting the values for the new items
-    list = ['RT', 'block', 'iti_duration', 'options_duration', 'options_onset', 'response', 'options_onset', 'subject', 'task', 'task_duration', 
+    list = ['RT', 'block', 'iti_duration', 'options_duration', 'options_onset', 'response', 'options_onset', 'subject', 'task', 'task_duration', # setting the values for the new items
            'task_onset', 'trial', 'word_duration', 'word_onset']
     for item in all_d.iteritems():
         for value in list:
@@ -116,17 +111,17 @@ if session == 1:
     for key in keys:
         if all_d[key]['valence'] == 1:
             if pos_ct < 25:
-                new_b1[pos_ct] = all_d[key]
+                new_b1[pos_ct + neg_ct] = all_d[key]
                 pos_ct = pos_ct + 1 
             else:
-                new_b2[pos_ct] = all_d[key]
+                new_b2[pos_ct + neg_ct] = all_d[key]
                 pos_ct = pos_ct + 1
         else:
             if neg_ct < 25:
-                new_b1[neg_ct] = all_d[key]
+                new_b1[pos_ct + neg_ct] = all_d[key]
                 neg_ct = neg_ct + 1
             else:
-                new_b2[neg_ct] = all_d[key]
+                new_b2[pos_ct + neg_ct] = all_d[key]
                 neg_ct = neg_ct + 1
 
     # splitting the encoded words into the two blocks based on valence and task
@@ -181,38 +176,25 @@ if session == 1:
     random.shuffle(session_1_lists)
     random.shuffle(session_1_lists)
     random.shuffle(session_1_lists)
-    random.shuffle(session_1_lists)
-    random.shuffle(session_1_lists)
-    random.shuffle(session_1_lists)
     session_2_lists = neg_enc_b2.values() + pos_enc_b2.values() + new_b2.values()
     random.shuffle(session_2_lists)
     random.shuffle(session_2_lists)
     random.shuffle(session_2_lists)
-    random.shuffle(session_2_lists)
-    random.shuffle(session_2_lists)
-    np.save(subject + '_session_2_list.npy',session_2_lists)
+    np.save(path2data + subject + '_session_2_list.npy',session_2_lists) #save the session 2 dict for later
 
 elif session == 2:
-    session_2_lists = np.load(subject + '_session_2_list.npy')
-    #df_session_2 = pd.read_csv(path2words + 'Session_2_Words/' + subject + '_session_2_words.csv')
-    #session_2_lists = df_session_2.T.to_dict().values() # turn them into lists of dicts
-    #random.shuffle(session_2_lists)
+    session_2_lists = np.load(path2data + subject + '_session_2_list.npy')
 
 # Recurring stimuli
 word = visual.TextStim(win, text='XXXX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#1B1C96')
-choice = visual.TextStim(win, text = '__', font='Arial', height = 0.10, pos = (0,0), wrapWidth = 50, color = '#ff7a5b', bold=True)
+choice = visual.TextStim(win, text = '__', font='Arial', height = 0.10, pos = (0,-.2), wrapWidth = 50, color = '#1B1C96', bold=True)
 no_resp = visual.TextStim(win, text='NO RESPONSE', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = 'black')
-
-fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,.15), color = 'black')
+fix = visual.TextStim(win, text = '+', height = 0.10, pos = (0,.15), color = '#1B1C96')
 instruct = visual.TextStim(win, text = 'XXXX', height = 0.10, wrapWidth = 80, pos = (0,0), color = '#1B1C96')
-
 old_new_prompt = visual.TextStim(win, text='Old or New?', font='Arial', height = 0.20, pos = (0,0.3), wrapWidth = 50, color = '#ff7a5b')
-task_prompt = visual.TextStim(win, text='Question?', font='Arial', height = 0.20, pos = (0,0.3), wrapWidth = 50, color = 'MediumTurquoise')
-#respond = visual.TextStim(win, text='RESPOND', font='Arial', height = 0.20, pos = (0,0.2), wrapWidth = 50, color = '#ff7a5b')
-
-scale = visual.TextStim(win, text='  1           2           3           4           5           6  ', height = 0.10, pos = (0,-0.25), wrapWidth = 50, color = 'black')
-scale_labels = visual.TextStim(win, text='Sure   Probably  Maybe   Maybe  Probably   Sure', height = 0.10, pos = (0,-0.4), wrapWidth = 50, color = '#1B1C96')
-
+task_prompt = visual.TextStim(win, text='Question?', font='Arial', height = 0.20, pos = (0,0.3), wrapWidth = 50, color = '#e569CE')
+scale = visual.TextStim(win, text='  1           2           3           4           5           6  ', height = 0.10, pos = (0,-0.25), wrapWidth = 50, color = '#1B1C96')
+scale_labels = visual.TextStim(win, text='Sure  Probably  Maybe  Maybe  Probably  Sure', height = 0.10, pos = (0,-0.4), wrapWidth = 50, color = '#1B1C96')
 old_new_scale = visual.TextStim(win, text='Old                             New', height = 0.17, pos = (0,-0.62), wrapWidth = 50, color = '#ff7a5b')
 task_scale = visual.TextStim(win, text='Describes                            Positive', height = 0.17, pos = (0,-0.62), wrapWidth = 50, color = '#1B1C96')
 
@@ -324,28 +306,25 @@ def show_respond(r_dict,phase='experiment'):
         if retKeys:
             ret_resp = retKeys[0][0]
             curr_RT = retKeys[0][1]
-            choice.setText(text = '__')
-            choice.setColor('#11A08E')
-
             if ret_resp == quit_key:
                 core.quit()
             elif ret_resp == key_1:
-                choice.setPos(newPos=(-0.72,-0.2))
+                choice.setPos(newPos=(-0.51,-0.25))
                 response = 1
             elif ret_resp == key_2:
-                choice.setPos(newPos=(-0.425,-0.2))
+                choice.setPos(newPos=(-0.3,-0.25))
                 response = 2
             elif ret_resp == key_3:
-                choice.setPos(newPos=(-0.14,-0.2))
+                choice.setPos(newPos=(-0.1,-0.25))
                 response = 3
             elif ret_resp == key_4:
-                choice.setPos(newPos=(0.14,-0.2))
+                choice.setPos(newPos=(0.1,-0.25))
                 response = 4
             elif ret_resp == key_5:
-                choice.setPos(newPos=(0.425,-0.2))
+                choice.setPos(newPos=(0.3,-0.25))
                 response = 5
             elif ret_resp == key_6:
-                choice.setPos(newPos=(0.72, -.2))
+                choice.setPos(newPos=(0.51, -.25))
                 response = 6
             for frame in range(half_sec): # Show the choice onscreen for 500 ms
                 fix.draw()
@@ -389,7 +368,7 @@ def show_task_respond(r_dict, phase = 'experiment'):
         enc_response = r_dict['response']
         enc_RT = r_dict['RT']
 
-    word.setColor(color = 'DarkSlateGrey')
+    word.setColor(color = '#2F1E6E')
     word.setText(text = curr_item)
     
     task_onset = exp_clock.getTime()
@@ -427,28 +406,25 @@ def show_task_respond(r_dict, phase = 'experiment'):
         if retKeys:
             ret_resp = retKeys[0][0]
             curr_RT = retKeys[0][1]
-            choice.setText(text = '__')
-            choice.setColor('#11A08E')
-
             if ret_resp == quit_key:
                 core.quit()
             elif ret_resp == key_1:
-                choice.setPos(newPos=(-0.72,-0.2))
+                choice.setPos(newPos=(-0.51,-0.25))
                 response = 1
             elif ret_resp == key_2:
-                choice.setPos(newPos=(-0.425,-0.2))
+                choice.setPos(newPos=(-0.3,-0.25))
                 response = 2
             elif ret_resp == key_3:
-                choice.setPos(newPos=(-0.14,-0.2))
+                choice.setPos(newPos=(-0.1,-0.25))
                 response = 3
             elif ret_resp == key_4:
-                choice.setPos(newPos=(0.14,-0.2))
+                choice.setPos(newPos=(0.1,-0.25))
                 response = 4
             elif ret_resp == key_5:
-                choice.setPos(newPos=(0.425,-0.2))
+                choice.setPos(newPos=(0.3,-0.25))
                 response = 5
             elif ret_resp == key_6:
-                choice.setPos(newPos=(0.72, -.2))
+                choice.setPos(newPos=(0.51, -.25))
                 response = 6
             for frame in range(half_sec): # Show the choice onscreen for 500 ms
                 fix.draw()
@@ -474,11 +450,11 @@ r_instructions = ['Welcome! Today we will be testing your memory. \n\nPress 1 to
 'When you see the "Old or New" prompt, try\nto remember:\n\nDid you see the word yesterday?\n\nPress 1 to advance.',
 'The prompts will appear above a cross,\nand the words will appear below the cross.\n\nTry to keep your eyes on the cross, to\nlimit extra eye movement.'
 '\n\nPress 1 to advance.',
-'After 3.5 seconds, another screen \nwill come up that says "RESPOND." \n\nThis is where you will choose \n"OLD" or "NEW." \n\nPress 1 to advance.',
+'After 3.5 seconds, another screen \nwith a scale will come up." \n\nThis is where you will choose \n"OLD" or "NEW." \n\nPress 1 to advance.',
 'If you select "OLD," a new screen will come up \
 \nwith the prompt "QUESTION" above a cross,\nand the word shown again below the cross.\
 \n\nWhen you see this prompt, try to remember: \n\nWhich question was asked about this word yesterday?\n\nPress 1 to advance.',
-'After 3.5 seconds, another screen \nwill come up that says "RESPOND." \n\nThis is where you will choose \nwhich question you answered\nfor that word yesterday:\n\n"Emotion?" or "Describes you?" \
+'After 3.5 seconds, another screen \nanother scale will come up." \n\nThis is where you will choose \nwhich question you answered\nfor that word yesterday:\n\n"Emotion?" or "Describes you?" \
 \n\nPress 1 to advance.',
 'Does this make sense to you?\n\nIf you have any questions, please ask now.\n\nOtherwise, press 1 to advance.',
 'Please try your best.\n\nWe will record your brain activity\nas you try to remember.\n\nThe ideal time to blink is when\nyou are responding.\
@@ -580,13 +556,9 @@ else:
         win.flip()
 
     #open output file for writing the retrieval data
-    #ret_file = path2data + subject + '_StressMem_Retrieval_Session2_' + expInfo['Date']
-    #ret_file = open(ret_file + '.csv', 'w')
-    #ret_file = glob.glob(path2data + subject + '*_StressMem_Retrieval_Session1*.csv')
-    #ret_file = open(ret_file + '.csv', 'w')
     ret_file = open(glob.glob(path2data + subject + '*_StressMem_Retrieval*.csv')[0], 'a')
     
-    trial = 1
+    trial = 101
     for r_dict in session_2_lists:
         phase,item, enc_task, enc_response, enc_RT, valence, letters, frequency, concreteness, part_of_speech, imageability, status, recog_resp, recog_rt, old_new_onset, old_new_duration, ret_stim_onset, ret_stim_duration, ret_options_onset, ret_options_duration = show_respond(r_dict)
         if recog_resp == 1 or recog_resp == 2:
