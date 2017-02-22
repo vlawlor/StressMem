@@ -1,4 +1,4 @@
-# Last updated: Feburary 21, 2017
+# Last updated: Feburary 22, 2017
 # Authors: Victoria Lawlor, Elyssa Barrick, and Dan Dillon
 # Runs retrieval for the StressMem experiment.
 
@@ -6,21 +6,18 @@
 import csv, getpass, os, random, sys, glob
 userName = getpass.getuser()
 monitorName = 'Elyssa Mac'
-
 path2words = '/Users/' + userName + '/Work/Expts/StressMem/PsychoPy/Stimuli/'
 path2data = '/Users/' + userName + '/Work/Expts/StressMem/Data/'
 
 # Shouldn't need to edit below . . . 
+import os.path, random, sys
 import numpy as np
 import pandas as pd
-import random, sys
-import os.path
+from copy import deepcopy # Best not to copy things in python if you can avoid it, having multiple copies of objects can get hairy . . . 
 from random import shuffle
 from psychopy import prefs
-from copy import deepcopy
 prefs.general['audioLib'] = ['pygame']
-from psychopy import sound
-from psychopy import core, data, event, gui, misc, visual
+from psychopy import core, data, event, gui, misc, sound, visual
 
 print (pd.__version__)
 print (sys.version)
@@ -28,7 +25,7 @@ print (sys.path)
 
 # GUI for subject number and date
 try:
-    expInfo = misc.fromFile('StressTasklastParams.pickle')
+    expInfo = misc.fromFile('StressTaskLastParams.pickle')
 except:
     expInfo = {'SubjectID':'999' }
 
@@ -37,7 +34,7 @@ expInfo['Session'] = 0
 
 dlg = gui.DlgFromDict(expInfo, title='StressMem', fixed=['Date'])
 if dlg.OK:
-    misc.toFile('StressMemlastParams.pickle', expInfo) 
+    misc.toFile('StressTaskLastParams.pickle', expInfo) 
 else:
     core.quit()
 subject = expInfo['SubjectID']
@@ -73,117 +70,88 @@ quit_key = 'q'
 
 # WORDS
 if session == 1:
-    # read in ALL of the words and the encoded words as dicts
-    df_all = pd.read_csv(path2words + 'balanced_words.csv')
-    df_all = df_all.reset_index(drop = True)
-    all_d = df_all.T.to_dict()
+    # Read all words and the encoding words into dicts, then remove any encoded words from the "new words" dict
+    enc_words = {}
+    new_words = {}
+
     encoded = glob.glob(path2data + subject + '*_StressMem_enc.csv')
-    df_encoded = pd.read_csv(encoded[0])
-    df_encoded = df_encoded.loc[df_encoded['block'] == 1]
-    df_encoded = df_encoded.reset_index(drop = True)
-    encoded_d = df_encoded.T.to_dict()
+    with open(encoded, 'rU') as x:
+    with open('balanced_words.csv', 'rU') as y:
+        enc_data = csv.DictReader(x)
+        all_data = csv.DictReader(y)
+        for row in all_data:
+            new_words[row['word']] = row
+            new_words[row['word']]['status'] = 'new'
+            del new_words[row['word']]['word']
+        for row in enc_data:
+            if row['word'] in new_words.keys():
+                del new_words[row['word']]
+            enc_words[row['word']] = row
+            enc_words[row['word']]['status'] = 'old'
+            del enc_words[row['word']]['word']
+        for new_key in ['RT', 'block', 'iti_duration', 'options_duration', 'options_onset', 'response', 'options_onset', 'subject', 'task', 'task_duration', # setting the values for the new items
+           'task_onset', 'trial', 'word_duration', 'word_onset']:
+            for key in new_words.keys():
+                new_words[key][new_key] = np.nan
 
-    # iterate through the full list and remove the word if it was shown at encoding, leaving us with the set of new words.
-    copy_all_item = deepcopy(all_d)
-    for key, enc_item in encoded_d.iteritems():
-        for key, all_item in copy_all_item.iteritems():
-            if all_item['word'] == enc_item['word']:
-                all_d.pop(key)
-                
-    for item in all_d.iteritems(): # assigning old/new status
-        item[1]['status'] = 'new'
-    for item in encoded_d.iteritems():
-        item[1]['status'] = 'old'
+    # Splitting the new and old words into the two blocks, with even division between positive and negative and also with even division b/w tasks for the old words
 
-    list = ['RT', 'block', 'iti_duration', 'options_duration', 'options_onset', 'response', 'options_onset', 'subject', 'task', 'task_duration', # setting the values for the new items
-           'task_onset', 'trial', 'word_duration', 'word_onset']
-    for item in all_d.iteritems():
-        for value in list:
-            item[1][value] = np.nan
-        
-    # shuffling the new dictionaries and splitting the new words into the two blocks
-    keys = all_d.keys()
-    random.shuffle(keys)
-    pos_ct = 0
-    new_b1 = {}
-    neg_ct = 0
-    new_b2 = {}
-    for key in keys:
-        if all_d[key]['valence'] == 1:
-            if pos_ct < 25:
-                new_b1[pos_ct + neg_ct] = all_d[key]
-                pos_ct = pos_ct + 1 
-            else:
-                new_b2[pos_ct + neg_ct] = all_d[key]
-                pos_ct = pos_ct + 1
+    new_neg = []
+    new_pos = []
+    old_neg_emo = []
+    old_neg_des = []
+    old_pos_emo = []
+    old_pos_des = []
+
+    for key in new_words.keys():
+        if new_words[key]['valence'] == '0':
+            new_neg.append(new_words[key])
         else:
-            if neg_ct < 25:
-                new_b1[pos_ct + neg_ct] = all_d[key]
-                neg_ct = neg_ct + 1
-            else:
-                new_b2[pos_ct + neg_ct] = all_d[key]
-                neg_ct = neg_ct + 1
+            new_pos.append(new_words[key])
 
-    # splitting the encoded words into the two blocks based on valence and task
-    dist = random.random()
-    if random.random() > .05:
-        pos_disc = 13
-        neg_disc = 12
-    else:
-        pos_disc = 12
-        neg_disc = 13    
-    pos_describes_ct = 0
-    pos_emotion_ct = 0
-    pos_ct = 0
-    pos_enc_b1 = {}
-    pos_enc_b2 = {}
-    neg_describes_ct = 0
-    neg_emotion_ct = 0
-    neg_ct = 0
-    neg_enc_b1 = {}
-    neg_enc_b2 = {}
+    for key in enc_words.keys():
+        if enc_words[key]['valence'] == '0' and enc_words[key]['task'] == 'Positive':
+            old_neg_emo.append(enc_words[key])
+        elif enc_words[key]['valence'] == '0' and enc_words[key]['task'] == 'Describe':
+            old_neg_des.append(enc_words[key])
+        elif enc_words[key]['valence'] == '1' and enc_words[key]['task'] == 'Positive':
+            old_pos_emo.append(enc_words[key])
+        elif enc_words[key]['valence'] == '1' and enc_words[key]['task'] == 'Describe':
+            old_pos_des.append(enc_words[key])
 
-    keys = encoded_d.keys()
-    random.shuffle(keys)
-    for key in keys:
-        if encoded_d[key]['valence'] == 0:
-            if pos_describes_ct < pos_disc and encoded_d[key]['task'] == 'Describes':
-                pos_enc_b1[pos_ct] = encoded_d[key]
-                pos_describes_ct = pos_describes_ct + 1
-                pos_ct = pos_ct + 1
-            elif pos_emotion_ct < neg_disc and encoded_d[key]['task'] == 'Positive':
-                pos_enc_b1[pos_ct] = encoded_d[key]
-                pos_emotion_ct = pos_emotion_ct + 1
-                pos_ct = pos_ct + 1     
-            else:
-                pos_enc_b2[pos_ct] = encoded_d[key]
-                pos_ct = pos_ct + 1
+    for word_list in [new_neg, new_pos, old_neg_emo, old_neg_des, old_pos_emo, old_pos_des]:
+        random.shuffle(word_list)
+
+    session_1_list = []
+    session_2_list = []
+
+    for block in [1,2]:
+        if block == 1:
+            emo_ct = random.choice([12,13])
+            des_ct = 25 - emo_ct
+            session_1_list.append(new_neg[:25])
+            session_1_list.append(new_pos[:25])
+            session_1_list.append(old_neg_emo[:emo_ct])
+            session_1_list.append(old_neg_des[:des_ct])
+            session_1_list.append(old_pos_emo[:emo_ct])
+            session_1_list.append(old_pos_des[:des_ct])
         else:
-            if neg_describes_ct < neg_disc and encoded_d[key]['task'] == 'Describes':
-                neg_enc_b1[neg_ct] = encoded_d[key]
-                neg_describes_ct = neg_describes_ct + 1
-                neg_ct = neg_ct + 1
-            elif neg_emotion_ct < pos_disc and encoded_d[key]['task'] == 'Positive':
-                neg_enc_b1[neg_ct] = encoded_d[key]
-                neg_emotion_ct = neg_emotion_ct + 1
-                neg_ct = neg_ct + 1     
-            else:
-                neg_enc_b2[neg_ct] = encoded_d[key]
-                neg_ct = neg_ct + 1
+            emo_ct = des_ct
+            des_ct = 25 - emo_ct
+            session_2_list.append(new_neg[25:50])
+            session_2_list.append(new_pos[25:50])
+            session_2_list.append(old_neg_emo[emo_ct:25])
+            session_2_list.append(old_neg_des[des_ct:25])
+            session_2_list.append(old_pos_emo[emo_ct:25])
+            session_2_list.append(old_pos_des[des_ct:25])
 
-    # combine these
-    session_1_lists = neg_enc_b1.values() + pos_enc_b1.values() + new_b1.values()
-    random.shuffle(session_1_lists)
-    random.shuffle(session_1_lists)
-    random.shuffle(session_1_lists)
-    session_2_lists = neg_enc_b2.values() + pos_enc_b2.values() + new_b2.values()
-    random.shuffle(session_2_lists)
-    random.shuffle(session_2_lists)
-    random.shuffle(session_2_lists)
-    np.save(path2data + subject + '_session_2_list.npy',session_2_lists) #save the session 2 dict for later
+    for sess_list in [session_1_list,session_2_list]:
+        random.shuffle(sess_list)
+
+    np.save(path2data + subject + '_session_2_list.npy', session_2_list) #save the session 2 list of dicts for later
 
 elif session == 2:
-    session_2_lists = np.load(path2data + subject + '_session_2_list.npy')
+    session_2_list = np.load(path2data + subject + '_session_2_list.npy')
 
 # Recurring stimuli
 word = visual.TextStim(win, text='XXXX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#1B1C96')
@@ -453,7 +421,7 @@ r_instructions = ['Welcome! Today we will be testing your memory. \n\nPress 1 to
 'After 3.5 seconds, a scale will appear \nat the bottom of the screen. \n\nThis is where you will choose \n"OLD" or "NEW." \n\nPress 1 to advance.',
 'If you select "OLD," a new screen will \ncome up with the prompt "QUESTION" \nabove a cross, and the word shown again \nbelow the cross.\
 \n\nWhen you see this prompt, try to remember: \n\nWhich question was asked about \nthis word yesterday?\n\nPress 1 to advance.',
-'After 3.5 seconds, a scale will appear at the \nbottom of the screen. \n\nThis is where you will choose which question \nyou answered for that word yesterday:\n\n"Emotion?" or "Describes you?" \
+'After 3.5 seconds, a scale will appear at the \nbottom of the screen. \n\nThis is where you will choose which question \nyou answered for that word yesterday:\n\n"Emotion?" or "Describes?" \
 \n\nPress 1 to advance.',
 'Does this make sense to you?\n\nIf you have any questions, please ask now.\n\nOtherwise, press 1 to advance.',
 'Please try your best.\n\nWe will record your brain activity\nas you try to remember.\n\nThe ideal time to blink is when\nyou are responding.\
@@ -521,7 +489,7 @@ if session == 1:
 
     # open output file for writing the retrieval data
     trial = 1
-    for r_dict in session_1_lists:
+    for r_dict in session_1_list:
         print(r_dict)
         phase, item, enc_task, enc_response, enc_RT, valence, letters, frequency, concreteness, part_of_speech, imageability, status, recog_resp, recog_rt, old_new_onset, old_new_duration, ret_stim_onset, ret_stim_duration, ret_options_onset, ret_options_duration = show_respond(r_dict)
         if recog_resp == 1 or recog_resp == 2: # if they say the word is old, ask which question they answered about it
@@ -558,7 +526,7 @@ else:
     ret_file = open(glob.glob(path2data + subject + '*_StressMem_Retrieval*.csv')[0], 'a')
     
     trial = 101
-    for r_dict in session_2_lists:
+    for r_dict in session_2_list:
         phase,item, enc_task, enc_response, enc_RT, valence, letters, frequency, concreteness, part_of_speech, imageability, status, recog_resp, recog_rt, old_new_onset, old_new_duration, ret_stim_onset, ret_stim_duration, ret_options_onset, ret_options_duration = show_respond(r_dict)
         if recog_resp == 1 or recog_resp == 2:
             task_resp, task_rt, task_onset, task_duration, task_prompt_onset, task_prompt_duration, task_options_onset, task_options_duration = show_task_respond(r_dict)
