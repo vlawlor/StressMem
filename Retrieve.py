@@ -62,7 +62,7 @@ half_sec = int(0.5*fps)
 
 # Window
 wintype='pyglet'
-win = visual.Window([1420,580], fullscr = False, allowGUI = False, monitor = monitorName, color = '#FFFFFA', winType=wintype, units = 'norm')
+win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = monitorName, color = '#FFFFFA', winType=wintype, units = 'norm')
 
 # Buttons
 key_1 = 'c'
