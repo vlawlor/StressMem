@@ -38,7 +38,7 @@ def correct_session():
         if dlg.OK:
             correct_session()
         else:
-            core.quit()
+            sys.exit()
     else:
         misc.toFile('StressTaskLastParams.pickle', expInfo) 
     subject = expInfo['SubjectID']
@@ -90,7 +90,7 @@ if session == 1:
 
     encoded = glob.glob(path2data + subject + '*_StressMem_enc.csv')
     with open(encoded[0], 'rU') as x:
-        with open('balanced_words.csv', 'rU') as y:
+        with open(path2words + 'balanced_words.csv', 'rU') as y:
             enc_data = csv.DictReader(x)
             all_data = csv.DictReader(y)
             for row in all_data:
@@ -212,7 +212,7 @@ def show_instruct(instruct_list, adv_key=key_1, quit=quit_key):
                      advance = 'true'
                  elif resp == quit_key:
                      win.close()
-                     core.quit()
+                     sys.exit()
 
 def show_ITI():
     '''Display fixation ITI for 500, 1000, or 2000 ms, with 500 ms over-represented'''
@@ -277,7 +277,8 @@ def show_respond(r_dict,phase='experiment'):
     RT.reset()
     retKeys = []
     event.clearEvents()
-    while frame < (10*fps) and advance == 'false':
+    
+    while (exp_clock.getTime() - ret_options_onset < 10) and advance == 'false':
         retKeys = event.getKeys(keyList=[key_1,key_2,key_3,key_4,key_5,key_6,quit_key],timeStamped=RT)
         fix.draw()
         word.draw()
@@ -286,7 +287,6 @@ def show_respond(r_dict,phase='experiment'):
         draw_dots()
         old_new_scale.draw()
         win.flip()
-        frame = frame + 1
 
         if retKeys:
             key_sound.play()
@@ -294,7 +294,7 @@ def show_respond(r_dict,phase='experiment'):
             curr_RT = retKeys[0][1]
             if ret_resp == quit_key:
                 win.close()
-                core.quit()
+                sys.exit()
             else:
                 response = d[ret_resp]['response']
                 choice.setPos(newPos = d[ret_resp]['position'])
@@ -307,7 +307,6 @@ def show_respond(r_dict,phase='experiment'):
                 old_new_scale.draw()
                 choice.draw()
                 win.flip()
-
             for frame in range(fps): # Add 1000 ms fixation before the ITI, to regain fixation between trials.
                 fix.draw()
                 win.flip()
@@ -326,6 +325,7 @@ def show_task_respond(r_dict, phase = 'experiment'):
     curr_RT = np.nan
     advance='false'
     frame = 0
+    response = np.nan
     if phase == 'practice':
         mean_valence = mean_arousal = valence = letters = frequency = concreteness = part_of_speech = imageability = enc_response = enc_RT = np.nan
     else:
@@ -365,7 +365,8 @@ def show_task_respond(r_dict, phase = 'experiment'):
     event.clearEvents()
     RT.reset()
     retKeys = []
-    while frame < (10*fps) and advance == 'false':
+
+    while (exp_clock.getTime() - task_options_onset < 10) and advance == 'false':
         retKeys = event.getKeys(keyList=[key_1,key_2,key_3,key_4,key_5,key_6,quit_key],timeStamped=RT)
         fix.draw()
         word.draw()
@@ -374,8 +375,6 @@ def show_task_respond(r_dict, phase = 'experiment'):
         task_scale.draw()
         task_prompt.draw()
         win.flip()
-        frame = frame + 1
-        response = np.nan
 
         if retKeys:
             key_sound.play()
