@@ -1,4 +1,4 @@
-# Last updated: Feburary 24, 2017
+# Last updated: Feburary 28, 2017
 # Authors: Victoria Lawlor, Elyssa Barrick, and Dan Dillon
 # Runs retrieval for the StressMem experiment.
 
@@ -62,7 +62,7 @@ half_sec = int(0.5*fps)
 
 # Window
 wintype='pyglet'
-win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = monitorName, color = '#FFFFFA', winType=wintype, units = 'norm')
+win = visual.Window([1320,580], fullscr = False, allowGUI = False, monitor = monitorName, color = '#FFFFFA', winType=wintype, units = 'norm')
 
 # Buttons
 key_1 = 'c'
@@ -146,18 +146,16 @@ if session == 1:
             session_1_list.extend(new_pos[:25])
             session_1_list.extend(old_neg_emo[:emo_ct])
             session_1_list.extend(old_neg_des[:des_ct])
-            session_1_list.extend(old_pos_emo[:emo_ct])
-            session_1_list.extend(old_pos_des[:des_ct])
+            session_1_list.extend(old_pos_emo[:des_ct])
+            session_1_list.extend(old_pos_des[:emo_ct])
 
         else:
-            emo_ct = des_ct
-            des_ct = 25 - emo_ct
             session_2_list.extend(new_neg[25:50])
             session_2_list.extend(new_pos[25:50])
             session_2_list.extend(old_neg_emo[emo_ct:25])
             session_2_list.extend(old_neg_des[des_ct:25])
-            session_2_list.extend(old_pos_emo[emo_ct:25])
-            session_2_list.extend(old_pos_des[des_ct:25])
+            session_2_list.extend(old_pos_emo[des_ct:25])
+            session_2_list.extend(old_pos_des[emo_ct:25]) 
 
     for sess_list in [session_1_list,session_2_list]:
         random.shuffle(sess_list)
@@ -435,7 +433,7 @@ if session == 1:
     for frame in range(10*half_sec):
         fix.draw()
         win.flip()
-    ret_file = path2data + subject + expInfo['Date'] + '_StressMem_ret' 
+    ret_file = path2data + subject + '_' + expInfo['Date'] + '_StressMem_ret' 
     ret_file = open(ret_file + '.csv', 'w')
     ret_file.write('subject,phase,session,trial,item,enc_task,enc_response,enc_RT,valence,letters,frequency,concreteness,part_of_speech,imageability,status,recog_resp,recog_rt,recog_result,\
     old_new_onset,old_new_duration,ret_stim_onset,ret_stim_duration,ret_options_onset,ret_options_duration,task_resp,task_rt,task_onset,task_duration,task_prompt_onset,task_prompt_duration,\
