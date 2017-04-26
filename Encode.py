@@ -1,4 +1,4 @@
-# Last updated: Feburary 14, 2017
+# Last updated: April 25, 2017
 # Authors: Victoria Lawlor, Elyssa Barrick, and Dan Dillon
 # Runs encoding for the StressMem experiment.
 
@@ -14,10 +14,11 @@ path2data = '/Users/' + userName + '/Work/Expts/StressMem/Data/'
 import numpy as np
 import pandas as pd
 from random import shuffle, randint
-import sys
+import sys, math, os, random, string
 from psychopy import prefs
 prefs.general['audioLib'] = ['pygame']
 from psychopy import core, data, event, gui, misc, sound, visual
+from psychopy.tools.monitorunittools import posToPix # for vpixx
 
 #print (pd.__version__)
 #print (sys.version)
@@ -48,6 +49,13 @@ RT = core.Clock()
 # Window
 wintype='pyglet' 
 win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = monitorName, color = '#FFFFFA', winType=wintype, units = 'norm')
+
+stim_dur_target = int(120*.2) # for vpixx
+
+pixelTarg = visual.Rect(win=win, units='pix', fillColorSpace='rgb255', lineColor='black', size=10)
+posPix = posToPix(pixelTarg)
+pixelTarg.pos = (-1920/2, 1080/2)
+stim_clock = core.Clock()
 
 # Buttons
 key_1 = 'c'
@@ -164,6 +172,16 @@ def show_enc_full(in_dict, phase = 'experiment'):
 
     task_onset = exp_clock.getTime()
     for i in range(fps):
+        #--------for vpix--------
+        if i == 0 and stage == 'expt':
+            if curr_task == 'Emotion':
+                pixelTarg.fillColor = (24 ,8 ,0 ) # trigger code 1 for displying the Emotion prompt
+            elif curr_task == 'Describes':
+                pixelTarg.fillColor = (40 ,8 ,0 ) # trigger code 2 for displying the Describes prompt
+        else:
+            pixelTarg.fillColor = (0, 0, 0)  # no trigger sent
+        pixelTarg.draw()
+        #--------for vpix--------
         task_prompt.draw()
         fix.draw()
         win.flip()
@@ -173,6 +191,20 @@ def show_enc_full(in_dict, phase = 'experiment'):
     stim_onset = exp_clock.getTime()
     stim_sound.play()
     for i in range(3*fps):
+        #--------for vpix--------
+        if i == 0 and stage == 'expt':
+            if curr_task == 'Emotion' and valence == 1:
+                pixelTarg.fillColor = (56 ,8 ,0 ) # trigger code 3 for displying the Emotion prompt + pos word
+            elif curr_task == 'Emotion' and valence == 0:
+                pixelTarg.fillColor = (72 ,8 ,0 ) # trigger code 4 for displying the Emotion prompt + neg word
+            elif curr_task == 'Describes' and valence == 1:
+                pixelTarg.fillColor = (88 ,8 ,0 ) # trigger code 5 for displying the Describes prompt + pos word
+            elif curr_task == 'Describes' and valence == 0:
+                pixelTarg.fillColor = (104 ,8 ,0 ) # trigger code 6 for displying the Describes prompt + neg word
+        else:
+            pixelTarg.fillColor = (0, 0, 0)  # no trigger sent
+        pixelTarg.draw()
+        #--------for vpix--------
         task_prompt.draw()
         fix.draw()
         word.draw()
@@ -190,6 +222,19 @@ def show_enc_full(in_dict, phase = 'experiment'):
     options_onset = exp_clock.getTime()
     while frame < (10*fps) and advance == 'false':
         allKeys = event.getKeys(keyList=[key_1, key_5, quit_key],timeStamped=RT)
+        if frame == 0 and stage == 'expt':
+            if curr_task == 'Emotion' and valence == 1:
+                pixelTarg.fillColor = (120 ,8 ,0 ) # trigger code 7 for displying the Emotion prompt + pos word
+            elif curr_task == 'Emotion' and valence == 0:
+                pixelTarg.fillColor = (136 ,8 ,0 ) # trigger code 8 for displying the Emotion prompt + neg word
+            elif curr_task == 'Describes' and valence == 1:
+                pixelTarg.fillColor = (152 ,8 ,0 ) # trigger code 9 for displying the Describes prompt + pos word
+            elif curr_task == 'Describes' and valence == 0:
+                pixelTarg.fillColor = (168 ,8 ,0 ) # trigger code 10 for displying the Describes prompt + neg word
+        else:
+            pixelTarg.fillColor = (0, 0, 0)  # no trigger sent
+        pixelTarg.draw()
+        #--------for vpix--------
         task_prompt.draw()
         word.draw()
         fix.draw()
@@ -207,6 +252,13 @@ def show_enc_full(in_dict, phase = 'experiment'):
             if enc_resp == key_1:
                 response = 'yes'
                 while frame < (4*half_sec):
+                    #--------for vpix--------
+                    if i == 0 and stage == 'expt':
+                        pixelTarg.fillColor = (184,8,0) # trigger code 11 for responding 'yes'
+                    else:
+                        pixelTarg.fillColor = (0, 0, 0)  # no trigger sent
+                    pixelTarg.draw()
+                    #--------for vpix--------
                     task_prompt.draw()
                     word.draw()
                     fix.draw()
@@ -220,6 +272,13 @@ def show_enc_full(in_dict, phase = 'experiment'):
             elif enc_resp == key_5:
                 response = 'no'
                 while frame < (4*half_sec):
+                    #--------for vpix--------
+                    if i == 0 and stage == 'expt':
+                        pixelTarg.fillColor = (200,8,0) # trigger code 12 for responding 'no'
+                    else:
+                        pixelTarg.fillColor = (0, 0, 0)  # no trigger sent
+                    pixelTarg.draw()
+                    #--------for vpix--------
                     task_prompt.draw()
                     word.draw()
                     fix.draw()
@@ -352,6 +411,7 @@ pract4 = {'word': 'thoughtful', 'valence' : '1', 'task': 'Positive?'}
 pract_trials = [pract1, pract2, pract3, pract4]
 
 # RUN PRACTICE TRIALS
+stage='prac'
 show_instruct(enc_instructions)
 
 # Start with 5 seconds of fixation to let the person settle in
@@ -369,7 +429,7 @@ options_duration, response, curr_RT = show_enc_full(dict, phase='practice')
 show_instruct(final_enc_instructions)
 
 # RUN EXPERIMENTAL TRIALS
-
+stage='expt'
 # Open output file for writing the encoding data
 enc_file = expInfo['SubjectID'] + '_' + expInfo['Date']
 enc_file = open(path2data + enc_file+'_StressMem_enc' +'.csv', 'w')
