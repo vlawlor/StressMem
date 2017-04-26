@@ -222,6 +222,7 @@ def show_enc_full(in_dict, phase = 'experiment'):
     options_onset = exp_clock.getTime()
     while frame < (10*fps) and advance == 'false':
         allKeys = event.getKeys(keyList=[key_1, key_5, quit_key],timeStamped=RT)
+        #--------for vpix--------
         if frame == 0 and stage == 'expt':
             if curr_task == 'Emotion' and valence == 1:
                 pixelTarg.fillColor = (120 ,8 ,0 ) # trigger code 7 for displying the Emotion prompt + pos word
@@ -253,7 +254,7 @@ def show_enc_full(in_dict, phase = 'experiment'):
                 response = 'yes'
                 while frame < (4*half_sec):
                     #--------for vpix--------
-                    if i == 0 and stage == 'expt':
+                    if frame == 0 and stage == 'expt':
                         pixelTarg.fillColor = (184,8,0) # trigger code 11 for responding 'yes'
                     else:
                         pixelTarg.fillColor = (0, 0, 0)  # no trigger sent
@@ -273,7 +274,7 @@ def show_enc_full(in_dict, phase = 'experiment'):
                 response = 'no'
                 while frame < (4*half_sec):
                     #--------for vpix--------
-                    if i == 0 and stage == 'expt':
+                    if frame == 0 and stage == 'expt':
                         pixelTarg.fillColor = (200,8,0) # trigger code 12 for responding 'no'
                     else:
                         pixelTarg.fillColor = (0, 0, 0)  # no trigger sent
