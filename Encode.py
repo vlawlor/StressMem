@@ -1,4 +1,4 @@
-# Last updated: April 25, 2017
+# Last updated: May 1, 2017
 # Authors: Victoria Lawlor, Elyssa Barrick, and Dan Dillon
 # Runs encoding for the StressMem experiment.
 
@@ -52,7 +52,7 @@ win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = mon
 
 stim_dur_target = int(120*.2) # for vpixx
 
-pixelTarg = visual.Rect(win=win, units='pix', fillColorSpace='rgb255', lineColor='black', size=10)
+pixelTarg = visual.Rect(win=win, units='pix', fillColorSpace='rgb255', lineColor='black', size=100)
 posPix = posToPix(pixelTarg)
 pixelTarg.pos = (-1920/2, 1080/2)
 stim_clock = core.Clock()
@@ -127,7 +127,22 @@ for i in range(50):
 # Now shuffle the list and we're good to go!
 random.shuffle(enc_list)
 
+# Read in the csv with keys and trigger codes as a dict of dicts
+with open('/Users/mlm2/Work/Expts/StressMem/PsychoPy/Stimuli/enc_eeg_trigger_codes.csv', mode='r') as infile:
+    reader = csv.reader(infile)
+    with open('/Users/mlm2/Work/Expts/StressMem/PsychoPy/Stimuli/enc_new_eeg_trigger_codes.csv', mode='w') as outfile:
+        writer = csv.writer(outfile)
+        trigger_dict = dict((rows[0],{'trigger': rows[1], 'r': rows[2], 'g': rows[3], 'b': rows[4]}) for rows in reader)
+
 # FUNCTIONS
+
+def send_trigger(code_word):
+    '''Given a code word, send the appropriate event trigger by displaying a pixel on the top left corner of the screen'''
+    r = trigger_dict[code_word]['r']
+    g = trigger_dict[code_word]['g']
+    b = trigger_dict[code_word]['b']
+    return(r, g, b)
+
 def show_instruct(instruct_list, adv_key=key_1, quit=quit_key):
     '''Print instructions and wait for key press'''
 
@@ -174,12 +189,10 @@ def show_enc_full(in_dict, phase = 'experiment'):
     for i in range(fps):
         #--------for vpix--------
         if i == 0 and stage == 'expt':
-            if curr_task == 'Emotion':
-                pixelTarg.fillColor = (24 ,8 ,0 ) # trigger code 1 for displying the Emotion prompt
-            elif curr_task == 'Describes':
-                pixelTarg.fillColor = (40 ,8 ,0 ) # trigger code 2 for displying the Describes prompt
+            r, g, b = send_trigger(curr_task)
         else:
-            pixelTarg.fillColor = (0, 0, 0)  # no trigger sent
+            r = g = b = 0
+        pixelTarg.fillColor = (r, g, b)
         pixelTarg.draw()
         #--------for vpix--------
         task_prompt.draw()
@@ -193,16 +206,10 @@ def show_enc_full(in_dict, phase = 'experiment'):
     for i in range(3*fps):
         #--------for vpix--------
         if i == 0 and stage == 'expt':
-            if curr_task == 'Emotion' and valence == 1:
-                pixelTarg.fillColor = (56 ,8 ,0 ) # trigger code 3 for displying the Emotion prompt + pos word
-            elif curr_task == 'Emotion' and valence == 0:
-                pixelTarg.fillColor = (72 ,8 ,0 ) # trigger code 4 for displying the Emotion prompt + neg word
-            elif curr_task == 'Describes' and valence == 1:
-                pixelTarg.fillColor = (88 ,8 ,0 ) # trigger code 5 for displying the Describes prompt + pos word
-            elif curr_task == 'Describes' and valence == 0:
-                pixelTarg.fillColor = (104 ,8 ,0 ) # trigger code 6 for displying the Describes prompt + neg word
+            r, g, b = send_trigger(curr_word)
         else:
-            pixelTarg.fillColor = (0, 0, 0)  # no trigger sent
+            r = g = b = 0
+        pixelTarg.fillColor = (r, g, b)
         pixelTarg.draw()
         #--------for vpix--------
         task_prompt.draw()
@@ -224,16 +231,10 @@ def show_enc_full(in_dict, phase = 'experiment'):
         allKeys = event.getKeys(keyList=[key_1, key_5, quit_key],timeStamped=RT)
         #--------for vpix--------
         if frame == 0 and stage == 'expt':
-            if curr_task == 'Emotion' and valence == 1:
-                pixelTarg.fillColor = (120 ,8 ,0 ) # trigger code 7 for displying the Emotion prompt + pos word
-            elif curr_task == 'Emotion' and valence == 0:
-                pixelTarg.fillColor = (136 ,8 ,0 ) # trigger code 8 for displying the Emotion prompt + neg word
-            elif curr_task == 'Describes' and valence == 1:
-                pixelTarg.fillColor = (152 ,8 ,0 ) # trigger code 9 for displying the Describes prompt + pos word
-            elif curr_task == 'Describes' and valence == 0:
-                pixelTarg.fillColor = (168 ,8 ,0 ) # trigger code 10 for displying the Describes prompt + neg word
+            r, g, b = send_trigger('resp_screen')
         else:
-            pixelTarg.fillColor = (0, 0, 0)  # no trigger sent
+            r = g = b = 0
+        pixelTarg.fillColor = (r, g, b)
         pixelTarg.draw()
         #--------for vpix--------
         task_prompt.draw()
@@ -255,9 +256,10 @@ def show_enc_full(in_dict, phase = 'experiment'):
                 while frame < (4*half_sec):
                     #--------for vpix--------
                     if frame == 0 and stage == 'expt':
-                        pixelTarg.fillColor = (184,8,0) # trigger code 11 for responding 'yes'
+                        r, g, b = send_trigger(response)
                     else:
-                        pixelTarg.fillColor = (0, 0, 0)  # no trigger sent
+                        r = g = b = 0
+                    pixelTarg.fillColor = (r, g, b)
                     pixelTarg.draw()
                     #--------for vpix--------
                     task_prompt.draw()
@@ -275,9 +277,10 @@ def show_enc_full(in_dict, phase = 'experiment'):
                 while frame < (4*half_sec):
                     #--------for vpix--------
                     if frame == 0 and stage == 'expt':
-                        pixelTarg.fillColor = (200,8,0) # trigger code 12 for responding 'no'
+                        r, g, b = send_trigger(response)
                     else:
-                        pixelTarg.fillColor = (0, 0, 0)  # no trigger sent
+                        r = g = b = 0
+                    pixelTarg.fillColor = (r, g, b)
                     pixelTarg.draw()
                     #--------for vpix--------
                     task_prompt.draw()
@@ -307,6 +310,14 @@ def show_ITI():
 
     iti_onset = exp_clock.getTime()
     for frames in range(duration):
+        #--------for vpix--------
+        if frames == 0 and stage == 'expt':
+            r, g, b = send_trigger('fixation')
+        else:
+            r = g = b = 0
+        pixelTarg.fillColor = (r, g, b)
+        pixelTarg.draw()
+        #--------for vpix--------
         fix.draw()
         win.flip()
     iti_offset = exp_clock.getTime()
@@ -337,6 +348,14 @@ def show_no_resp():
     '''Show the text "no response"'''
     no_resp_sound.play()
     for frames in range(2*fps):
+        #--------for vpix--------
+        if frames == 0 and stage == 'expt':
+            r, g, b = send_trigger('no_resp_screen')
+        else:
+            r = g = b = 0
+        pixelTarg.fillColor = (r, g, b)
+        pixelTarg.draw()
+        #--------for vpix--------
         no_resp.draw()
         win.flip()
 
