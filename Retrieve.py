@@ -1,11 +1,11 @@
-# Last updated: Feburary 28, 2017
+# Last updated: May 2, 2017
 # Authors: Victoria Lawlor, Elyssa Barrick, and Dan Dillon
 # Runs retrieval for the StressMem experiment.
 
 # User, you may need/want to edit the next several lines
 import csv, getpass, os, random, sys, glob
 userName = getpass.getuser()
-monitorName = 'Elyssa Mac'
+monitorName = 'mlm2'
 path2words = '/Users/' + userName + '/Work/Expts/StressMem/PsychoPy/Stimuli/'
 path2data = '/Users/' + userName + '/Work/Expts/StressMem/Data/'
 
@@ -18,6 +18,7 @@ from random import shuffle
 from psychopy import prefs
 prefs.general['audioLib'] = ['pygame']
 from psychopy import core, data, event, gui, misc, sound, visual
+from psychopy.tools.monitorunittools import posToPix # for vpixx
 
 # GUI for subject number and date
 try:
@@ -62,7 +63,7 @@ half_sec = int(0.5*fps)
 
 # Window
 wintype='pyglet'
-win = visual.Window([1320,580], fullscr = False, allowGUI = False, monitor = monitorName, color = '#FFFFFA', winType=wintype, units = 'norm')
+win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = monitorName, color = '#FFFFFA', winType=wintype, units = 'norm')
 
 # Buttons
 key_1 = 'c'
@@ -165,6 +166,13 @@ if session == 1:
 elif session == 2:
     session_2_list = np.load(path2data + subject + '_session_2_list.npy')
 
+# Read in the csv with keys and trigger codes as a dict of dicts
+with open('/Users/mlm2/Work/Expts/StressMem/PsychoPy/Stimuli/ret_eeg_trigger_codes.csv', mode='r') as infile:
+    reader = csv.reader(infile)
+    with open('/Users/mlm2/Work/Expts/StressMem/PsychoPy/Stimuli/ret_new_eeg_trigger_codes.csv', mode='w') as outfile:
+        writer = csv.writer(outfile)
+        trigger_dict = dict((rows[0],{'trigger': rows[1], 'r': rows[2], 'g': rows[3], 'b': rows[4]}) for rows in reader)
+
 # Recurring stimuli
 word = visual.TextStim(win, text='XXXX', font='Arial', height = 0.20, pos = (0,0), wrapWidth = 50, color = '#1B1C96')
 choice = visual.TextStim(win, text = '__', font='Arial', height = 0.10, pos = (0,-.2), wrapWidth = 50, color = '#1B1C96', bold=True)
@@ -176,6 +184,12 @@ task_prompt = visual.TextStim(win, text='Question?', font='Arial', height = 0.20
 scale = visual.TextStim(win, text='  1     2     3     4     5     6  ', height = 0.13, pos = (0,-0.21), wrapWidth = 50, color = '#1B1C96')
 old_new_scale = visual.TextStim(win, text='Old              New', height = 0.17, pos = (0,-0.40), wrapWidth = 50, color = '#ff7a5b')
 task_scale = visual.TextStim(win, text='Describes        Positive', height = 0.17, pos = (0,-0.4), wrapWidth = 50, color = '#e569CE')
+
+# setting up the top left pixel (the one that vpixx uses to send triggers)
+pixelTarg = visual.Rect(win=win, units='pix', fillColorSpace='rgb255', lineColor='black', size=100)
+posPix = posToPix(pixelTarg)
+pixelTarg.pos = (-1920/2, 1080/2)
+stim_clock = core.Clock()
 
 key_sound = sound.SoundPygame('resp.wav')
 stim_sound = sound.SoundPygame('stim.wav')
@@ -192,6 +206,13 @@ def draw_dots():
 
 
 # Functions
+def send_trigger(code_word):
+    '''Given a code word, send the appropriate event trigger by displaying a pixel on the top left corner of the screen'''
+    r = trigger_dict[code_word]['r']
+    g = trigger_dict[code_word]['g']
+    b = trigger_dict[code_word]['b']
+    return(r, g, b)
+    
 def show_instruct(instruct_list, adv_key=key_1, quit=quit_key):
     '''Print instructions onscreen and wait for key press'''
     event.clearEvents()
@@ -217,6 +238,14 @@ def show_ITI():
     iti_durs = [half_sec, half_sec, fps, 2*fps]
     duration = random.choice(iti_durs)
     for frames in range(duration):
+        #--------for vpix--------
+        if frames == 0 and stage == 'expt':
+            r, g, b = send_trigger('fixation')
+        else:
+            r = g = b = 0
+        pixelTarg.fillColor = (r, g, b)
+        pixelTarg.draw()
+        #--------for vpix--------
         fix.draw()
         win.flip()
     return (duration*refresh)
@@ -225,6 +254,14 @@ def show_no_resp():
     '''Show the text "no response"'''
     no_resp_sound.play()
     for frames in range(3*fps):
+        #--------for vpix--------
+        if frames == 0 and stage == 'expt':
+            r, g, b = send_trigger('no_resp_screen')
+        else:
+            r = g = b = 0
+        pixelTarg.fillColor = (r, g, b)
+        pixelTarg.draw()
+        #--------for vpix--------
         no_resp.draw()
         win.flip()
 
@@ -255,6 +292,14 @@ def show_respond(r_dict,phase='experiment'):
     
     old_new_onset = exp_clock.getTime()
     for frames in range(fps): # show the prompt for one second
+        #--------for vpix--------
+        if frames == 0 and stage == 'expt':
+            r, g, b = send_trigger('old_new_prompt')
+        else:
+            r = g = b = 0
+        pixelTarg.fillColor = (r, g, b)
+        pixelTarg.draw()
+        #--------for vpix--------
         fix.draw()
         old_new_prompt.draw()
         win.flip()
@@ -264,6 +309,14 @@ def show_respond(r_dict,phase='experiment'):
     ret_stim_onset = exp_clock.getTime()
     stim_sound.play()
     for frames in range(3*fps): # show the prompt & word for three seconds
+        #--------for vpix--------
+        if frames == 0 and stage == 'expt':
+            r, g, b = send_trigger(curr_item)
+        else:
+            r = g = b = 0
+        pixelTarg.fillColor = (r, g, b)
+        pixelTarg.draw()
+        #--------for vpix--------
         fix.draw()
         old_new_prompt.draw()
         word.draw()
@@ -275,9 +328,18 @@ def show_respond(r_dict,phase='experiment'):
     RT.reset()
     retKeys = []
     event.clearEvents()
+    frame = 0
     
-    while (exp_clock.getTime() - ret_options_onset < 10) and advance == 'false':
+    while frame < (10*fps) and advance == 'false':
         retKeys = event.getKeys(keyList=[key_1,key_2,key_3,key_4,key_5,key_6,quit_key],timeStamped=RT)
+        #--------for vpix--------
+        if frame == 0 and stage == 'expt':
+            r, g, b = send_trigger('old_new_scale')
+        else:
+            r = g = b = 0
+        pixelTarg.fillColor = (r, g, b)
+        pixelTarg.draw()
+        #--------for vpix--------
         fix.draw()
         word.draw()
         old_new_prompt.draw()
@@ -297,6 +359,14 @@ def show_respond(r_dict,phase='experiment'):
                 response = d[ret_resp]['response']
                 choice.setPos(newPos = d[ret_resp]['position'])
             for frame in range(half_sec): # Show the choice onscreen for 500 ms
+                #--------for vpix--------
+                if frame == 0 and stage == 'expt':
+                    r, g, b = send_trigger(str(response))
+                else:
+                    r = g = b = 0
+                pixelTarg.fillColor = (r, g, b)
+                pixelTarg.draw()
+                #--------for vpix--------
                 fix.draw()
                 word.draw()
                 scale.draw()
@@ -306,9 +376,18 @@ def show_respond(r_dict,phase='experiment'):
                 choice.draw()
                 win.flip()
             for frame in range(fps): # Add 1000 ms fixation before the ITI, to regain fixation between trials.
+                #--------for vpix--------
+                if frame == 0 and stage == 'expt':
+                    r, g, b = send_trigger('fixation')
+                else:
+                    r = g = b = 0
+                pixelTarg.fillColor = (r, g, b)
+                pixelTarg.draw()
+                #--------for vpix--------
                 fix.draw()
                 win.flip()
             advance = 'true'
+        frame = frame + 1
     ret_options_offset = exp_clock.getTime()
     ret_options_duration = ret_options_offset - ret_options_onset
     return (phase, curr_item, task, enc_response, enc_RT, valence, letters, frequency, concreteness, part_of_speech, imageability, status, response, curr_RT,
@@ -343,15 +422,31 @@ def show_task_respond(r_dict, phase = 'experiment'):
     
     task_onset = exp_clock.getTime()
     for frames in range(fps): # show the prompt for one second
+        #--------for vpix--------
+        if frames == 0 and stage == 'expt':
+            r, g, b = send_trigger('source_prompt')
+        else:
+            r = g = b = 0
+        pixelTarg.fillColor = (r, g, b)
+        pixelTarg.draw()
+        #--------for vpix--------
         fix.draw()
         task_prompt.draw()
         win.flip()
     task_offset = exp_clock.getTime()
     task_duration = task_offset - task_onset
-    
+
     task_prompt_onset = exp_clock.getTime()
     stim_sound.play()
     for frames in range(3*fps): # show the prompt & word for three seconds
+        #--------for vpix--------
+        if frames == 0 and stage == 'expt':
+            r, g, b = send_trigger(curr_item)
+        else:
+            r = g = b = 0
+        pixelTarg.fillColor = (r, g, b)
+        pixelTarg.draw()
+        #--------for vpix--------
         fix.draw()
         task_prompt.draw()
         word.draw()
@@ -363,9 +458,18 @@ def show_task_respond(r_dict, phase = 'experiment'):
     event.clearEvents()
     RT.reset()
     retKeys = []
+    frame = 0
 
-    while (exp_clock.getTime() - task_options_onset < 10) and advance == 'false':
+    while frame < (10*fps) and advance == 'false':
         retKeys = event.getKeys(keyList=[key_1,key_2,key_3,key_4,key_5,key_6,quit_key],timeStamped=RT)
+        #--------for vpix--------
+        if frame == 0 and stage == 'expt':
+            r, g, b = send_trigger('source_scale')
+        else:
+            r = g = b = 0
+        pixelTarg.fillColor = (r, g, b)
+        pixelTarg.draw()
+        #--------for vpix--------
         fix.draw()
         word.draw()
         scale.draw()
@@ -384,6 +488,14 @@ def show_task_respond(r_dict, phase = 'experiment'):
                 response = d[ret_resp]['response']
                 choice.setPos(newPos = d[ret_resp]['position'])
             for frame in range(half_sec): # Show the choice onscreen for 500 ms
+                #--------for vpix--------
+                if frame == 0 and stage == 'expt':
+                    r, g, b = send_trigger(str(response + 6))
+                else:
+                    r = g = b = 0
+                pixelTarg.fillColor = (r, g, b)
+                pixelTarg.draw()
+                #--------for vpix--------
                 fix.draw()
                 word.draw()
                 task_prompt.draw()
@@ -393,9 +505,18 @@ def show_task_respond(r_dict, phase = 'experiment'):
                 choice.draw()
                 win.flip()
             for frame in range(fps): # Add 1000 ms fixation before the ITI, to regain fixation between trials.
+                #--------for vpix--------
+                if frame == 0 and stage == 'expt':
+                    r, g, b = send_trigger('fixation')
+                else:
+                    r = g = b = 0
+                pixelTarg.fillColor = (r, g, b)
+                pixelTarg.draw()
+                #--------for vpix--------
                 fix.draw()
                 win.flip()
             advance = 'true'
+        frame = frame + 1
     task_options_offset = exp_clock.getTime()
     task_options_duration = task_options_offset - task_options_onset
     return (response, curr_RT, task_onset, task_duration, task_prompt_onset, task_prompt_duration, task_options_onset, task_options_duration)
@@ -428,6 +549,7 @@ time2_instructions = ['We are ready to begin the second block of trials.\n\nDo y
 end_instruct = ['Great job! You have finished this portion of the task.\n\nPlease wait for the experimenter.']
 
 if session == 1:
+    stage = 'prac'
     show_instruct(r_instructions)
     # Start with 5 seconds of fixation to let the person settle in
     for frame in range(10*half_sec):
@@ -463,6 +585,7 @@ if session == 1:
     iti_dur = show_ITI()
     show_instruct(post_prac_instructions)
     # Start with 5 seconds of fixation to let the person settle in
+    stage = 'expt'
     for frame in range(10*half_sec):
         fix.draw()
         win.flip()
@@ -499,6 +622,7 @@ if session == 1:
         trial = trial + 1
     
 else:
+    stage = 'expt'
     show_instruct(time2_instructions)
     
     # Start with 5 seconds of fixation to let the person settle in
