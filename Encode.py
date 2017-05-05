@@ -52,7 +52,7 @@ win = visual.Window([1920,1080], fullscr = True, allowGUI = False, monitor = mon
 
 stim_dur_target = int(120*.2) # for vpixx
 
-pixelTarg = visual.Rect(win=win, units='pix', fillColorSpace='rgb255', lineColor='black', size=100)
+pixelTarg = visual.Rect(win=win, units='pix', fillColorSpace='rgb255', size=100)
 posPix = posToPix(pixelTarg)
 pixelTarg.pos = (-1920/2, 1080/2)
 stim_clock = core.Clock()
@@ -129,10 +129,9 @@ random.shuffle(enc_list)
 
 # Read in the csv with keys and trigger codes as a dict of dicts
 with open('/Users/mlm2/Work/Expts/StressMem/PsychoPy/Stimuli/enc_eeg_trigger_codes.csv', mode='r') as infile:
+    next(infile)
     reader = csv.reader(infile)
-    with open('/Users/mlm2/Work/Expts/StressMem/PsychoPy/Stimuli/enc_new_eeg_trigger_codes.csv', mode='w') as outfile:
-        writer = csv.writer(outfile)
-        trigger_dict = dict((rows[0],{'trigger': rows[1], 'r': rows[2], 'g': rows[3], 'b': rows[4]}) for rows in reader)
+    trigger_dict = dict((rows[0],{'trigger': rows[1], 'r': rows[2], 'g': rows[3], 'b': rows[4]}) for rows in reader)
 
 # FUNCTIONS
 
@@ -142,6 +141,17 @@ def send_trigger(code_word):
     g = trigger_dict[code_word]['g']
     b = trigger_dict[code_word]['b']
     return(r, g, b)
+
+def send_trigger_full(frame_word, code_word):
+    '''Given a code word, send the appropriate event trigger by displaying a pixel on the top left corner of the screen'''
+    if frame_word == 0 and stage == 'expt':
+        r = trigger_dict[code_word]['r']
+        g = trigger_dict[code_word]['g']
+        b = trigger_dict[code_word]['b']
+    else:
+        r = g = b = 0
+    pixelTarg.fillColor = (r, g, b)
+    pixelTarg.draw()
 
 def show_instruct(instruct_list, adv_key=key_1, quit=quit_key):
     '''Print instructions and wait for key press'''
@@ -187,14 +197,7 @@ def show_enc_full(in_dict, phase = 'experiment'):
 
     task_onset = exp_clock.getTime()
     for i in range(fps):
-        #--------for vpix--------
-        if i == 0 and stage == 'expt':
-            r, g, b = send_trigger(curr_task)
-        else:
-            r = g = b = 0
-        pixelTarg.fillColor = (r, g, b)
-        pixelTarg.draw()
-        #--------for vpix--------
+        send_trigger_full(i, curr_task)
         task_prompt.draw()
         fix.draw()
         win.flip()
@@ -204,14 +207,7 @@ def show_enc_full(in_dict, phase = 'experiment'):
     stim_onset = exp_clock.getTime()
     stim_sound.play()
     for i in range(3*fps):
-        #--------for vpix--------
-        if i == 0 and stage == 'expt':
-            r, g, b = send_trigger(curr_word)
-        else:
-            r = g = b = 0
-        pixelTarg.fillColor = (r, g, b)
-        pixelTarg.draw()
-        #--------for vpix--------
+        send_trigger_full(i, curr_word)
         task_prompt.draw()
         fix.draw()
         word.draw()
@@ -229,14 +225,8 @@ def show_enc_full(in_dict, phase = 'experiment'):
     options_onset = exp_clock.getTime()
     while frame < (10*fps) and advance == 'false':
         allKeys = event.getKeys(keyList=[key_1, key_5, quit_key],timeStamped=RT)
-        #--------for vpix--------
-        if frame == 0 and stage == 'expt':
-            r, g, b = send_trigger('resp_screen')
-        else:
-            r = g = b = 0
-        pixelTarg.fillColor = (r, g, b)
+        send_trigger_full(frame, 'resp_screen')
         pixelTarg.draw()
-        #--------for vpix--------
         task_prompt.draw()
         word.draw()
         fix.draw()
@@ -254,14 +244,7 @@ def show_enc_full(in_dict, phase = 'experiment'):
             if enc_resp == key_1:
                 response = 'yes'
                 while frame < (4*half_sec):
-                    #--------for vpix--------
-                    if frame == 0 and stage == 'expt':
-                        r, g, b = send_trigger(response)
-                    else:
-                        r = g = b = 0
-                    pixelTarg.fillColor = (r, g, b)
-                    pixelTarg.draw()
-                    #--------for vpix--------
+                    send_trigger_full(frame, response)
                     task_prompt.draw()
                     word.draw()
                     fix.draw()
@@ -275,14 +258,7 @@ def show_enc_full(in_dict, phase = 'experiment'):
             elif enc_resp == key_5:
                 response = 'no'
                 while frame < (4*half_sec):
-                    #--------for vpix--------
-                    if frame == 0 and stage == 'expt':
-                        r, g, b = send_trigger(response)
-                    else:
-                        r = g = b = 0
-                    pixelTarg.fillColor = (r, g, b)
-                    pixelTarg.draw()
-                    #--------for vpix--------
+                    send_trigger_full(frame, response)
                     task_prompt.draw()
                     word.draw()
                     fix.draw()
@@ -310,14 +286,7 @@ def show_ITI():
 
     iti_onset = exp_clock.getTime()
     for frames in range(duration):
-        #--------for vpix--------
-        if frames == 0 and stage == 'expt':
-            r, g, b = send_trigger('fixation')
-        else:
-            r = g = b = 0
-        pixelTarg.fillColor = (r, g, b)
-        pixelTarg.draw()
-        #--------for vpix--------
+        send_trigger_full(frames, 'fixation')
         fix.draw()
         win.flip()
     iti_offset = exp_clock.getTime()
@@ -348,14 +317,7 @@ def show_no_resp():
     '''Show the text "no response"'''
     no_resp_sound.play()
     for frames in range(2*fps):
-        #--------for vpix--------
-        if frames == 0 and stage == 'expt':
-            r, g, b = send_trigger('no_resp_screen')
-        else:
-            r = g = b = 0
-        pixelTarg.fillColor = (r, g, b)
-        pixelTarg.draw()
-        #--------for vpix--------
+        send_trigger_full(frames, 'no_resp_screen')
         no_resp.draw()
         win.flip()
 
